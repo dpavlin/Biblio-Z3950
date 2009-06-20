@@ -5,6 +5,7 @@ use strict;
 
 use WWW::Mechanize;
 use MARC::Record;
+use File::Slurp;
 
 binmode STDOUT, ':utf8';
 
@@ -30,49 +31,109 @@ my $cobiss_marc21 = {
 	},
 };
 
+our $mech = WWW::Mechanize->new();
+our $hits;
+
+sub diag {
+	print "# ", @_, $/;
+}
+
+# Koha Z39.50 query:
+#
+# Bib-1 @and @and @and @and @and @and @and @or
+# @attr 1=8 isbn-issn 
+# @attr 1=7 isbn-issn 
+# @attr 1=4 title 
+# @attr 1=1003 author 
+# @attr 1=16 dewey 
+# @attr 1=21 subject-holding 
+# @attr 1=12 control-no 
+# @attr 1=1007 standard-id 
+# @attr 1=1016 any
+
+our $usemap = {
+	8		=> 'BN',	# FIXME check
+	7		=> 'SN',	# FIXME check
+	4		=> 'TI',
+	1003	=> 'TI',
+	16		=> 'CU',
+	21		=> 'SU',
+#	12		=> '',
+#	1007	=> '',
+#	1016	=> '',
+
+};
+
+sub usemap {
+	my $f = shift || die;
+	$usemap->{$f};
+}
+
 sub search {
+	my ( $self, $query ) = @_;
+
+	die "need query" unless defined $query;
 
 	my $url = 'http://cobiss.izum.si/scripts/cobiss?ukaz=GETID&lani=en';
 
-warn "# get $url\n";
+diag "# get $url";
 
-	my $mech = WWW::Mechanize->new();
 	$mech->get( $url );
 
-warn "# got session\n";
+diag "# got session";
 
 	$mech->follow_link( text_regex => qr/union/ );
 
-warn "# submit search\n";
+diag "# switch to advanced form (select)";
+
+diag $mech->content;
+
+	$mech->follow_link( url_regex => qr/mode=3/ );
+
+diag "# submit search $query";
 
 	$mech->submit_form(
 		fields => {
-			'SS1' => 'Krleza',
+			'SS1' => $query,
 		},
 	);
 
-	my $hits = 1;
+	$hits = 0;
 	if ( $mech->content =~ m{hits:\s*<b>\s*(\d+)\s*</b>}s ) {
 		$hits = $1;
 	} else {
-		warn "get't find results in ", $mech->content;
+		diag "get't find results in ", $mech->content;
+		return;
 	}
 
-warn "# got $hits results, get first one\n";
+diag "# got $hits results, get first one";
 
 	$mech->follow_link( url_regex => qr/ukaz=DISP/ );
 
-warn "# in COMARC format\n";
+diag "# in COMARC format";
 
 	$mech->follow_link( url_regex => qr/fmt=13/ );
+}
+
+
+sub fetch_marc {
+	my ($self) = @_;
 
 	my $comarc;
 
-	if ( $mech->content =~ m{<pre>\s*(.+1\..+?)\s*</pre>}s ) {
+	if ( $mech->content =~ m{<pre>\s*(.+?(\d+\.)\s+ID=(\d+).+?)\s*</pre>}s ) {
+
 		my $comarc = $1;
+		my $nr = $2;
+		my $id = $3;
+
+diag "# fetch_marc $nr [$id]";
+
 		$comarc =~ s{</?b>}{}gs;
 		$comarc =~ s{<font[^>]*>}{<s>}gs;
 		$comarc =~ s{</font>}{<e>}gs;
+
+		write_file "comarc/$id", $comarc;
 
 		print $comarc;
 
@@ -81,26 +142,26 @@ warn "# in COMARC format\n";
 		foreach my $line ( split(/[\r\n]+/, $comarc) ) {
 			our @f;
 
-			if ( $line !~ s{(\d\d\d)([01 ])([01 ])}{} ) {
-				warn "SKIP: $line\n";
+			if ( $line !~ s{^(\d\d\d)([01 ])([01 ])}{} ) {
+				diag "SKIP: $line";
 			} else {
 				$line .= "<eol>";
 
 				@f = ( $1, $2, $3 );
-				sub sf { warn "sf",@_,"|",@f; push @f, @_; }
+				sub sf { push @f, @_; }
 				$line =~ s{<s>(\w)<e>([^<]+)\s*}{sf($1, $2)}ges;
-				warn "# f:", join(' ', @f), " left:|$line|\n";
+				diag "# f:", join('|', @f), " left: |$line|";
 				$marc->add_fields( @f );
 			}
 		}
 
-		open(my $out, '>:utf8', 'out.marc');
+		open(my $out, '>:utf8', "marc/$id");
 		print $out $marc->as_usmarc;
 		close($out);
 
-		warn $marc->as_formatted;
+		diag $marc->as_formatted;
 
-		return $comarc;
+		return $marc->as_usmarc;
 	} else {
 		die "can't fetch COMARC format from ", $mech->content;
 	}
