@@ -10,6 +10,7 @@ my $build = Module::Build->new(
 	requires    => {
 		'WWW::Mechanize' => '1.23',
 		'MARC::Record' => '2.00',
+		'Net::Z3950::SimpleServer',
 	},
 );
 
