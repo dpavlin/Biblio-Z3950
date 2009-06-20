@@ -76,19 +76,19 @@ sub search {
 
 	my $url = 'http://cobiss.izum.si/scripts/cobiss?ukaz=GETID&lani=en';
 
-diag "# get $url";
+diag "get $url";
 
 	$mech->get( $url );
 
-diag "# got session";
+diag "got session";
 
 	$mech->follow_link( text_regex => qr/union/ );
 
-diag "# switch to advanced form (select)";
+diag "switch to advanced form (select)";
 
 	$mech->follow_link( url_regex => qr/mode=3/ );
 
-diag "# submit search $query";
+diag "submit search $query";
 
 	$mech->submit_form(
 		fields => {
@@ -104,11 +104,11 @@ diag "# submit search $query";
 		return;
 	}
 
-diag "# got $hits results, get first one";
+diag "got $hits results, get first one";
 
 	$mech->follow_link( url_regex => qr/ukaz=DISP/ );
 
-diag "# in COMARC format";
+diag "in COMARC format";
 
 	$mech->follow_link( url_regex => qr/fmt=13/ );
 }
@@ -125,7 +125,7 @@ sub fetch_marc {
 		my $nr = $2;
 		my $id = $3;
 
-diag "# fetch_marc $nr [$id]";
+diag "fetch_marc $nr [$id]";
 
 		$comarc =~ s{</?b>}{}gs;
 		$comarc =~ s{<font[^>]*>}{<s>}gs;
@@ -138,17 +138,16 @@ diag "# fetch_marc $nr [$id]";
 		my $marc = MARC::Record->new;
 
 		foreach my $line ( split(/[\r\n]+/, $comarc) ) {
-			our @f;
 
 			if ( $line !~ s{^(\d\d\d)([01 ])([01 ])}{} ) {
 				diag "SKIP: $line";
 			} else {
 				$line .= "<eol>";
 
-				@f = ( $1, $2, $3 );
+				our @f = ( $1, $2, $3 );
 				sub sf { push @f, @_; }
 				$line =~ s{<s>(\w)<e>([^<]+)\s*}{sf($1, $2)}ges;
-				diag "# f:", join('|', @f), " left: |$line|";
+				diag "f:", join('|', @f), " left: |$line|";
 				$marc->add_fields( @f );
 			}
 		}
