@@ -86,8 +86,6 @@ diag "# got session";
 
 diag "# switch to advanced form (select)";
 
-diag $mech->content;
-
 	$mech->follow_link( url_regex => qr/mode=3/ );
 
 diag "# submit search $query";
