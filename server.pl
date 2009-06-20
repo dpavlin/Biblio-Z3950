@@ -49,7 +49,8 @@ diag "search for $query";
         $this->{ERR_CODE} = 108;
         return;
     }
-    my $hits = $CROBISS::hits || diag "no results for $query";
+    my $hits = $COBISS::hits || diag "no results for $query";
+diag "got $hits hits";
     my $rs   = {
         lower => 1,
         upper => $hits < $max_records ? $max_records : $hits,

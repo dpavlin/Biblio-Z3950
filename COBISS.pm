@@ -5,7 +5,6 @@ use strict;
 
 use WWW::Mechanize;
 use MARC::Record;
-use File::Slurp;
 
 binmode STDOUT, ':utf8';
 
@@ -119,7 +118,7 @@ sub fetch_marc {
 
 	my $comarc;
 
-	if ( $mech->content =~ m{<pre>\s*(.+?(\d+\.)\s+ID=(\d+).+?)\s*</pre>}s ) {
+	if ( $mech->content =~ m{<pre>\s*(.+?(\d+)\.\s+ID=(\d+).+?)\s*</pre>}s ) {
 
 		my $comarc = $1;
 		my $nr = $2;
@@ -131,7 +130,9 @@ diag "fetch_marc $nr [$id]";
 		$comarc =~ s{<font[^>]*>}{<s>}gs;
 		$comarc =~ s{</font>}{<e>}gs;
 
-		write_file "comarc/$id", $comarc;
+		open(my $out, '>:utf8', "comarc/$id");
+		print $out $comarc;
+		close($out);
 
 		print $comarc;
 
@@ -157,6 +158,9 @@ diag "fetch_marc $nr [$id]";
 		close($out);
 
 		diag $marc->as_formatted;
+
+		$nr++;
+		$mech->follow_link( url_regex => qr/rec=$nr/ );
 
 		return $marc->as_usmarc;
 	} else {
