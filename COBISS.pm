@@ -5,6 +5,7 @@ use strict;
 
 use WWW::Mechanize;
 use MARC::Record;
+use Data::Dump qw/dump/;
 
 binmode STDOUT, ':utf8';
 
@@ -17,8 +18,8 @@ my $cobiss_marc21 = {
 	 205  => { a => [  250 , 'a' ] },
 	 210  => {
 		a => [  250 , 'a' ],
-		c => [  260 , 'b' ],
-		d => [  260 , 'c' ],
+		c => [  250 , 'b' ],
+		d => [  250 , 'c' ],
 	},
 	215 => {
 		a => [  300 , 'a' ],
@@ -113,8 +114,12 @@ diag "in COMARC format";
 }
 
 
-sub fetch_marc {
-	my ($self) = @_;
+sub fetch_rec {
+	my ($self,$format) = @_;
+
+	$format ||= 'unimarc';
+
+	die "unknown format: $format" unless $format =~ m{(uni|us)marc};
 
 	my $comarc;
 
@@ -124,7 +129,7 @@ sub fetch_marc {
 		my $nr = $2;
 		my $id = $3;
 
-diag "fetch_marc $nr [$id]";
+diag "fetch_marc $nr [$id] $format";
 
 		$comarc =~ s{</?b>}{}gs;
 		$comarc =~ s{<font[^>]*>}{<s>}gs;
@@ -143,19 +148,51 @@ diag "fetch_marc $nr [$id]";
 			if ( $line !~ s{^(\d\d\d)([01 ])([01 ])}{} ) {
 				diag "SKIP: $line";
 			} else {
+				our @f = ( $1, $2, $3 );
 				$line .= "<eol>";
 
-				our @f = ( $1, $2, $3 );
-				sub sf { push @f, @_; }
-				$line =~ s{<s>(\w)<e>([^<]+)\s*}{sf($1, $2)}ges;
-				diag "f:", join('|', @f), " left: |$line|";
-				$marc->add_fields( @f );
+				if ( $format eq 'unimarc' ) {
+
+					diag dump(@f), "line: $line";
+					sub sf_uni {
+						warn "sf ",dump(@_);
+						push @f, @_;
+					}
+					$line =~ s{<s>(\w)<e>([^<]+)\s*}{sf_uni($1, $2)}ges;
+					diag "f:", dump(@f), " left: |$line|";
+					$marc->add_fields( @f );
+
+				} elsif ( $format eq 'usmarc' ) {
+
+					my ( $f, $i1, $i2 ) = @f;
+
+					our $out = {};
+
+					sub sf_us {
+						my ($f,$sf,$v) = @_;
+						if ( my $m = $cobiss_marc21->{$f}->{$sf} ) {
+							push @{ $out->{ $m->[0] } }, ( $m->[1], $v );
+						}
+						return;
+					}
+					$line =~ s{<s>(\w)<e>([^<]+)\s*}{sf_us($f,$1, $2)}ges;
+
+					diag "converted marc21 ",dump( $out );
+
+					foreach my $f ( keys %$out ) {
+						$marc->add_fields( $f, $i1, $i2, @{ $out->{$f} } );
+					}
+				}
 			}
 		}
 
-		open(my $out, '>:utf8', "marc/$id");
+		my $path = "marc/$id.$format";
+
+		open($out, '>:utf8', $path);
 		print $out $marc->as_usmarc;
 		close($out);
+
+		diag "created $path ", -s $path, " bytes";
 
 		diag $marc->as_formatted;
 

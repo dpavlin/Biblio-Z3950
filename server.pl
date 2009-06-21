@@ -103,7 +103,11 @@ diag Dumper( $this );
     }
     elsif ( $req_form eq &Net::Z3950::OID::unimarc ) {	# FIXME convert to usmarc
         $this->{REP_FORM} = &Net::Z3950::OID::unimarc;
-        $this->{RECORD} = COBISS->fetch_marc;
+        $this->{RECORD} = COBISS->fetch_rec('unimarc');
+    }
+    elsif ( $req_form eq &Net::Z3950::OID::usmarc ) {	# FIXME convert to usmarc
+        $this->{REP_FORM} = &Net::Z3950::OID::usmarc;
+        $this->{RECORD} = COBISS->fetch_rec('usmarc');
     }
     else {    ## Unsupported record format
         $this->{ERR_CODE} = 239;
