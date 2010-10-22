@@ -1,9 +1,11 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
+
+use warnings;
+use strict;
 
 use Net::Z3950::SimpleServer;
 use Net::Z3950::OID;
 use COBISS;
-use strict;
 
 my $max_records = 3; # XXX configure this
 my $max_result_sets = 10;
@@ -44,6 +46,7 @@ diag "search for $query";
 
     my $setname  = $this->{SETNAME};
     my $repl_set = $this->{REPL_SET};
+diag "SETNAME $setname REPL_SET $repl_set";
     my $result;
     unless ( $result = COBISS->search( $query ) ) {
         $this->{ERR_CODE} = 108;
@@ -157,12 +160,13 @@ sub render {
 
 package Net::Z3950::RPN::Term;
 
+use Data::Dump qw(dump);
 use COBISS;
 
 sub render {
     my $this       = shift;
 
-print "render ", $this;
+print "render ", dump($this);
 
     my $attributes = {};
     my $prefix     = "";
