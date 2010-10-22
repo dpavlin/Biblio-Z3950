@@ -143,8 +143,6 @@ diag "sf = ", dump(@sf);
 
 		my $id = $hash->{SYS} || die "no SYS";
 
-
-
 		my $path = "marc/$id.$format";
 
 		open(my $out, '>:utf8', $path);
@@ -153,7 +151,7 @@ diag "sf = ", dump(@sf);
 
 		diag "created $path ", -s $path, " bytes";
 
-		diag $marc->as_formatted;
+#		diag $marc->as_formatted;
 
 		$nr++;
 
