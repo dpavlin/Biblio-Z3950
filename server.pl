@@ -41,8 +41,14 @@ diag "SearchHandle ",Dumper($this);
     my $rpn     = $this->{RPN};
     my $query;
 
-	my $database = $this->{DATABASES}->[0];
-	my $module   = $databases->{$database} || 'COBISS';
+	my $database = uc $this->{DATABASES}->[0];
+	my $module = $databases->{$database};
+	if ( ! defined $module ) {
+        $this->{ERR_CODE} = 108;
+		warn $this->{ERR_STR} = "unknown database $database - available: " . keys %$databases;
+		return;
+	}
+
 	my $from = $module->new;
 
 diag "using $module for $database ", Dumper( $from );
