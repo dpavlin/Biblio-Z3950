@@ -5,7 +5,15 @@ use strict;
 
 use Net::Z3950::SimpleServer;
 use Net::Z3950::OID;
+use Data::Dumper;
 use COBISS;
+
+my $databases = {
+	'COBISS' => 'COBISS',
+	'NSK01'  => 'Aleph',
+	'NSK10'  => 'Aleph',
+	'ZAG01'  => 'Aleph',
+};
 
 my $max_records = 3; # XXX configure this
 my $max_result_sets = 10;
@@ -24,8 +32,6 @@ sub InitHandle {
     $session->{SETS}  = {};
 }
 
-use Data::Dumper;
-
 sub SearchHandle {
     my $this    = shift;
 
@@ -35,7 +41,13 @@ diag "SearchHandle ",Dumper($this);
     my $rpn     = $this->{RPN};
     my $query;
 
-    eval { $query = $rpn->{query}->render(); };
+	my $database = $this->{DATABASES}->[0];
+	my $module   = $databases->{$database} || 'COBISS';
+	my $from = $module->new;
+
+diag "using $module for $database ", Dumper( $from );
+
+	eval { $query = $rpn->{query}->render( $from->usemap ); };
 	warn "ERROR: $@" if $@;
     if ( $@ && ref($@) ) {    ## Did someone/something report any errors?
         $this->{ERR_CODE} = $@->{errcode};
@@ -48,17 +60,17 @@ diag "search for $query";
     my $setname  = $this->{SETNAME};
     my $repl_set = $this->{REPL_SET};
 diag "SETNAME $setname REPL_SET $repl_set";
-    my $result;
-    unless ( $result = COBISS->search( $query ) ) {
+    my $hits;
+    unless ( $hits = $from->search( $query ) ) {
         $this->{ERR_CODE} = 108;
         return;
     }
-    my $hits = $COBISS::hits || diag "no results for $query";
 diag "got $hits hits";
     my $rs   = {
         lower => 1,
         upper => $hits < $max_records ? $max_records : $hits,
-        data  => $result->{'resultElements'},	# FIXME
+        hits  => $hits,
+		from => $from,
     };
     my $sets = $session->{SETS};
 
@@ -87,8 +99,6 @@ sub FetchHandle {
     my $rs;
     my $record;
 
-diag Dumper( $this );
-
     if ( !defined( $rs = $sets->{$setname} ) ) {
         $this->{ERR_CODE} = 30;
         return;
@@ -97,6 +107,9 @@ diag Dumper( $this );
         $this->{ERR_CODE} = 13;
         return;
     }
+
+	my $from = $rs->{from} || die "no from?";
+
     $this->{BASENAME} = "HtmlZ3950";
 
 #    if ( !defined($req_form) || ( $req_form eq &Net::Z3950::OID::xml ) )
@@ -107,11 +120,11 @@ diag Dumper( $this );
     }
     elsif ( $req_form eq &Net::Z3950::OID::unimarc ) {	# FIXME convert to usmarc
         $this->{REP_FORM} = &Net::Z3950::OID::unimarc;
-        $this->{RECORD} = COBISS->fetch_rec('unimarc');
+        $this->{RECORD} = $from->next_marc('unimarc');
     }
     elsif ( $req_form eq &Net::Z3950::OID::usmarc ) {	# FIXME convert to usmarc
         $this->{REP_FORM} = &Net::Z3950::OID::usmarc;
-        $this->{RECORD} = COBISS->fetch_rec('usmarc');
+        $this->{RECORD} = $from->next_marc('usmarc');
     }
     else {    ## Unsupported record format
         $this->{ERR_CODE} = 239;
@@ -165,13 +178,10 @@ use Data::Dump qw(dump);
 use COBISS;
 
 sub render {
-    my ($this,$from) = @_;
+	my ($this,$usemap) = @_;
 
-print "render ", dump($this);
-
-my $usemap = eval '$' . $from . '::usemap';
-die $@ if $@;
-warn "# $from usermap ",dump($usemap);
+warn "# render ", dump($this);
+warn "# usemap ", dump($usemap);
 
     my $attributes = {};
     my $prefix     = "";

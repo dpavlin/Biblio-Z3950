@@ -9,6 +9,14 @@ use Data::Dump qw/dump/;
 
 binmode STDOUT, ':utf8';
 
+sub new {
+    my ( $class ) = @_;
+    my $self = {};
+    bless $self, $class;
+    return $self;
+}
+
+
 my $cobiss_marc21 = {
 	'010' => { a => [ '020', 'a' ] },
 	 200  => {
@@ -31,9 +39,6 @@ my $cobiss_marc21 = {
 	},
 };
 
-our $mech = WWW::Mechanize->new();
-our $hits;
-
 sub diag {
 	print "# ", @_, $/;
 }
@@ -51,7 +56,7 @@ sub diag {
 # @attr 1=1007 standard-id 
 # @attr 1=1016 any
 
-our $usemap = {
+sub usemap {{
 	8		=> 'BN',	# FIXME check
 	7		=> 'SN',	# FIXME check
 	4		=> 'TI',
@@ -62,7 +67,7 @@ our $usemap = {
 #	1007	=> '',
 #	1016	=> '',
 
-};
+}};
 
 sub search {
 	my ( $self, $query ) = @_;
@@ -73,6 +78,8 @@ sub search {
 
 diag "get $url";
 
+	my $mech = $self->{mech} = WWW::Mechanize->new();
+	my $hits;
 	$mech->get( $url );
 
 diag "got session";
@@ -106,11 +113,15 @@ diag "got $hits results, get first one";
 diag "in COMARC format";
 
 	$mech->follow_link( url_regex => qr/fmt=13/ );
+
+	return $hits;
 }
 
 
-sub fetch_rec {
+sub next_marc {
 	my ($self,$format) = @_;
+
+	my $mech = $self->{mech} || die "no mech?";
 
 	$format ||= 'unimarc';
 
