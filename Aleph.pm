@@ -8,9 +8,6 @@ use Data::Dump qw/dump/;
 
 use base 'Scraper';
 
-our $mech = WWW::Mechanize->new();
-our $hits;
-
 sub diag {
 	print "# ", @_, $/;
 }
@@ -60,8 +57,7 @@ sub usemap {{
 #	12		=> '',
 #	1007	=> '',
 #	1016	=> '',
-
-};
+}};
 
 
 sub search {
@@ -89,7 +85,7 @@ diag "submit search $query";
 		},
 	);
 
-	$hits = 0;
+	my $hits = 0;
 	if ( $mech->content =~ m{ukupno\s+(\d+).*(do\s+(\d+))}s ) {
 		$hits = $1;
 		$hits = $2 if $2 && $2 < $1; # correct for max. results
