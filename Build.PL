@@ -4,7 +4,7 @@ use warnings;
 use strict;
 
 my $build = Module::Build->new(
-	module_name => 'Z3950::HTML::Scraper',
+	module_name => 'Biblio::Z39.50',
 	dist_version => '0.00',
 	license     => 'perl',
 	requires    => {

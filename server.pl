@@ -19,8 +19,8 @@ sub InitHandle {
     my $session = {};
 
     $this->{HANDLE}   = $session;
-    $this->{IMP_NAME} = "Z39.50 HTML scraping bot";
-    $this->{IMP_VER}  = "0.1";
+    $this->{IMP_NAME} = "Biblio Z39.50";
+    $this->{IMP_VER}  = "0.2";
     $session->{SETS}  = {};
 }
 
