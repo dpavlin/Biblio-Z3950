@@ -171,7 +171,7 @@ print "render ", dump($this);
 
 my $from = 'COBISS';
 
-my $usemap = eval "${from}::usemap;";
+my $usemap = eval '$' . $from . '::usemap';
 die $@ if $@;
 warn "# $from usermap ",dump($usemap);
 
