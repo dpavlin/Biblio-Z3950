@@ -165,11 +165,9 @@ use Data::Dump qw(dump);
 use COBISS;
 
 sub render {
-    my $this       = shift;
+    my ($this,$from) = @_;
 
 print "render ", dump($this);
-
-my $from = 'COBISS';
 
 my $usemap = eval '$' . $from . '::usemap';
 die $@ if $@;
