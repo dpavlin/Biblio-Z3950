@@ -64,11 +64,6 @@ our $usemap = {
 
 };
 
-sub usemap {
-	my $f = shift || die;
-	$usemap->{$f};
-}
-
 sub search {
 	my ( $self, $query ) = @_;
 

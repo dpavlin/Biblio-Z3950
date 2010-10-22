@@ -168,6 +168,11 @@ sub render {
 
 print "render ", dump($this);
 
+my $from = 'COBISS';
+
+my $usemap = eval "${from}::usemap;";
+warn "# $from usermap ",dump($usemap);
+
     my $attributes = {};
     my $prefix     = "";
     foreach my $attr ( @{ $this->{attributes} } ) {
@@ -176,7 +181,7 @@ print "render ", dump($this);
         $attributes->{$type} = $value;
     }
     if ( defined( my $use = $attributes->{1} ) ) {
-        if ( defined( my $field = COBISS::usemap($use) ) ) {
+        if ( defined( my $field = $usemap->{$use} ) ) {
             $prefix = $field;
         }
         else {
