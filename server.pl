@@ -36,6 +36,7 @@ diag "SearchHandle ",Dumper($this);
     my $query;
 
     eval { $query = $rpn->{query}->render(); };
+	warn "ERROR: $@" if $@;
     if ( $@ && ref($@) ) {    ## Did someone/something report any errors?
         $this->{ERR_CODE} = $@->{errcode};
         $this->{ERR_STR}  = $@->{errstr};
@@ -171,6 +172,7 @@ print "render ", dump($this);
 my $from = 'COBISS';
 
 my $usemap = eval "${from}::usemap;";
+die $@ if $@;
 warn "# $from usermap ",dump($usemap);
 
     my $attributes = {};
