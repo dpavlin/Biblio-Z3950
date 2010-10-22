@@ -7,6 +7,7 @@ use Net::Z3950::SimpleServer;
 use Net::Z3950::OID;
 use Data::Dumper;
 use COBISS;
+use Aleph;
 
 my $databases = {
 	'COBISS' => 'COBISS',
