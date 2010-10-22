@@ -3,10 +3,14 @@
 use warnings;
 use strict;
 
-use Test::More tests => 3;
+use Test::More tests => 4;
 
 use_ok 'Aleph';
 
-ok( my $search = Aleph->search( 'WTI=linux' ), 'search' );
+ok( my $o = Aleph->new, 'new' );
 
-ok( my $marc = Aleph->next_marc, 'next_marc' );
+ok( my $hits = $o->search( 'WTI=linux' ), 'search' );
+diag "$hits results";
+
+ok( my $marc = $o->next_marc, 'next_marc' );
+diag $marc;
