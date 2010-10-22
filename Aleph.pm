@@ -3,11 +3,10 @@ package Aleph;
 use warnings;
 use strict;
 
-use WWW::Mechanize;
 use MARC::Record;
 use Data::Dump qw/dump/;
 
-binmode STDOUT, ':utf8';
+use base 'Scraper';
 
 our $mech = WWW::Mechanize->new();
 our $hits;
@@ -53,9 +52,7 @@ sub diag {
 # WGA - Riječi u geografskim odrednicama 
 # WYR - Godina izdavanja
 
-our $usemap = {
-#	8		=> '',
-#	7		=> '',
+sub usemap {{
 	4		=> 'WTI',
 	1003	=> 'WTI',
 	16		=> 'CU',
@@ -66,10 +63,6 @@ our $usemap = {
 
 };
 
-sub usemap {
-	my $f = shift || die;
-	$usemap->{$f};
-}
 
 sub search {
 	my ( $self, $query ) = @_;
@@ -81,6 +74,7 @@ sub search {
 
 diag "get $url";
 
+	my $mech = $self->{mech} || die "no mech?";
 	$mech->get( $url );
 
 diag "advanced search";
@@ -111,11 +105,15 @@ diag "got $hits results, get first one";
 diag "in MARC format";
 
 	$mech->follow_link( url_regex => qr/format=001/ );
+
+	return $hits;
 }
 
 
 sub next_marc {
 	my ($self,$format) = @_;
+
+	my $mech = $self->{mech} || die "no mech?";
 
 print $mech->content;
 

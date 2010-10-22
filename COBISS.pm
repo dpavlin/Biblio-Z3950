@@ -3,19 +3,10 @@ package COBISS;
 use warnings;
 use strict;
 
-use WWW::Mechanize;
 use MARC::Record;
 use Data::Dump qw/dump/;
 
-binmode STDOUT, ':utf8';
-
-sub new {
-    my ( $class ) = @_;
-    my $self = {};
-    bless $self, $class;
-    return $self;
-}
-
+use base 'Scraper';
 
 my $cobiss_marc21 = {
 	'010' => { a => [ '020', 'a' ] },
@@ -78,7 +69,8 @@ sub search {
 
 diag "get $url";
 
-	my $mech = $self->{mech} = WWW::Mechanize->new();
+	my $mech = $self->{mech} || die "no mech?";
+
 	my $hits;
 	$mech->get( $url );
 
