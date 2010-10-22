@@ -125,18 +125,31 @@ print $mech->content;
 
 diag "parse $nr";
 
+		my $marc = MARC::Record->new;
+
 		my $html = $mech->content;
 		my $hash;
-		$html =~ s|<tr>\s*<td class=td1 id=bold[^>]*>(.+?)</td>\s*<td class=td1>(.+?)</td>|$hash->{$1} = "$2";|ges;
+
+		sub field {
+			my ( $f, $v ) = @_;
+			$v =~ s/\Q&nbsp;\E/ /gs;
+warn "# $f\t$v\n";
+			$hash->{$f} = $v;
+			my ($i1,$i2) = (' ',' ');
+			($i1,$i2) = ($2,$3) if $f =~ s/^(...)(.)?(.)?/$1/;
+			my @sf = split(/\|/, $v);
+			shift @sf;
+			@sf = map { s/^(\w)\s+//; { $1 => $_ } } @sf;
+diag "sf = ", dump(@sf);
+			$marc->add_fields( $f, $i1, $i2, @sf ) if $f =~ m/^\d+$/;
+		}
+
+		$html =~ s|<tr>\s*<td class=td1 id=bold[^>]*>(.+?)</td>\s*<td class=td1>(.+?)</td>|field($1,$2)|ges;
 		diag dump($hash);
 
 		my $id = $hash->{SYS} || die "no SYS";
 
-die;
 
-		my $marc = MARC::Record->new;
-
-#		$marc->add_fields( $f, $i1, $i2, @{ $out->{$f} } );
 
 		my $path = "marc/$id.$format";
 
