@@ -149,51 +149,44 @@ warn "## comarc join: $comarc\n";
 			if ( $line !~ s{^(\d\d\d)([01 ])([01 ])}{} ) {
 				diag "SKIP: $line";
 			} else {
-				our @f = ( $1, $2, $3 );
 				$line .= "<eol>";
 
-				if ( $format eq 'unimarc' ) {
+				my ( $f, $i1, $i2 ) = ( $1, $2, $3 );
 
-					diag dump(@f), "line: $line";
-					sub sf_uni {
-						warn "sf ",dump(@_);
-						push @f, @_;
-					}
-					$line =~ s{<s>(\w)<e>([^<]+)\s*}{sf_uni($1, $2)}ges;
-					diag "f:", dump(@f), " left: |$line|";
-					$marc->add_fields( @f );
+				our $out = undef;
+				our $ignored = undef;
 
-				} elsif ( $format eq 'usmarc' ) {
+				sub sf_us {
+					my ($format,$f,$sf,$v) = @_;
 
-					my ( $f, $i1, $i2 ) = @f;
+					$v =~ s/\s+$//;
 
-					our $out = undef;
-					our $ignored = undef;
-
-					sub sf_us {
-						my ($f,$sf,$v) = @_;
+					if ( $format =~ m/unimarc/i ) {
+						push @{ $out->{ $f } }, ( $sf, $v );
+					} elsif ( $format =~ m/marc/ ) {
 						if ( my $m = $cobiss_marc21->{$f}->{$sf} ) {
 							push @{ $out->{ $m->[0] } }, ( $m->[1], $v );
 						} else {
 							$ignored->{$f}++;
 						}
-						return ''; # fix warning
 					}
-					$line =~ s{<s>(\w)<e>([^<]+)\s*}{sf_us($f,$1, $2)}ges;
+					return ''; # fix warning
+				}
+				my $l = $line;
+				$l =~ s{<s>(\w)<e>([^<]+)}{sf_us($format,$f,$1, $2)}ges;
 
-					diag "converted marc21 ",dump( $out ) if $out;
+				diag "[$format] $line -> ",dump( $out ) if $out;
 
-					foreach my $f ( keys %$out ) {
-						$marc->add_fields( $f, $i1, $i2, @{ $out->{$f} } );
-					}
+				foreach my $f ( keys %$out ) {
+					$marc->add_fields( $f, $i1, $i2, @{ $out->{$f} } );
 				}
 			}
 		}
 
-		$self->save_marc( $id, $marc->as_usmarc );
+		$self->save_marc( "$id.$format", $marc->as_usmarc );
 		diag $marc->as_formatted;
 
-		if ( $nr < $self->{hints} ) {
+		if ( $nr < $self->{hits} ) {
 			warn "# fetch next result";
 			$nr++;
 			$mech->follow_link( url_regex => qr/rec=$nr/ );
