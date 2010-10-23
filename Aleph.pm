@@ -146,6 +146,7 @@ warn "parse $nr";
 		sub field {
 			my ( $f, $v ) = @_;
 			$v =~ s/\Q&nbsp;\E/ /gs;
+			$v =~ s/\s+$//gs;
 warn "## $f\t$v\n";
 			$hash->{$f} = $v;
 
