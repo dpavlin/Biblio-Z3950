@@ -7,6 +7,9 @@ use WWW::Mechanize;
 
 sub new {
     my ( $class, $database ) = @_;
+
+	$database ||= $class;
+
     my $self = {
 		mech => WWW::Mechanize->new(),
 		database => $database,
