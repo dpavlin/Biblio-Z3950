@@ -80,11 +80,13 @@ diag "advanced search";
 
 	$mech->follow_link( url_regex => qr/find-c/ );
 
+	my $database = $self->{database};
+
 	if ( $mech->content =~ m{Requested library is unavailable at the moment} ) {
-		warn "WARNING: default database not available";
+		warn "ERROR: default database not available, try to swith to $database\n";
 		$self->save_content;
-		my $url = 'local_base=' . lc $self->{database};
-		$mech->follow_link( url_regex => qr/$url/ );
+		$mech->follow_link( url_regex => qr/local_base=$database/i );
+		diag "re-try advanced search";
 		$mech->follow_link( url_regex => qr/find-c/ );
 	}
 
