@@ -9,7 +9,7 @@ use Data::Dump qw/dump/;
 use base 'Scraper';
 
 sub diag {
-	print "# ", @_, $/;
+	warn "# ", @_, $/;
 }
 
 # Koha Z39.50 query:
@@ -147,19 +147,9 @@ diag "sf = ", dump(@sf);
 
 		my $id = $hash->{SYS} || die "no SYS";
 
-		my $path = "marc/$id.$format";
-
-		open(my $out, '>:utf8', $path) || die "$path: $!";
-		print $out $marc->as_usmarc;
-		close($out);
-
-		diag "created $path ", -s $path, " bytes";
-
-#		diag $marc->as_formatted;
+		$self->save_marc( $id, $marc->as_usmarc );
 
 		$nr++;
-
-		die if $nr == 3; # FIXME
 
 		$mech->follow_link( url_regex => qr/set_entry=0*$nr/ );
 
