@@ -92,7 +92,7 @@ diag "submit search $query";
 
 	$hits = 0;
 	if ( $mech->content =~ m{hits:\s*<b>\s*(\d+)\s*</b>}s ) {
-		$hits = $1;
+		$self->{hits} = $hits = $1;
 	} else {
 		diag "get't find results in ", $mech->content;
 		return;
@@ -190,8 +190,13 @@ warn "## comarc join: $comarc\n";
 		$self->save_marc( $id, $marc->as_usmarc );
 		diag $marc->as_formatted;
 
-		$nr++;
-		$mech->follow_link( url_regex => qr/rec=$nr/ );
+		if ( $nr < $self->{hints} ) {
+			warn "# fetch next result";
+			$nr++;
+			$mech->follow_link( url_regex => qr/rec=$nr/ );
+		} else {
+			warn "# no more results";
+		}
 
 		return $marc->as_usmarc;
 	} else {
