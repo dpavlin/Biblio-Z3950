@@ -46,7 +46,7 @@ diag "SearchHandle ",Dumper($this);
 	my $module = $databases->{$database};
 	if ( ! defined $module ) {
         $this->{ERR_CODE} = 108;
-		warn $this->{ERR_STR} = "unknown database $database - available: " . keys %$databases;
+		warn $this->{ERR_STR} = "$database NOT FOUND in available databases: " . join(" ", keys %$databases);
 		return;
 	}
 
@@ -78,6 +78,7 @@ diag "got $hits hits";
         upper => $hits < $max_records ? $max_records : $hits,
         hits  => $hits,
 		from => $from,
+		results => [ undef ], # we don't use 0 element
     };
     my $sets = $session->{SETS};
 
@@ -115,9 +116,9 @@ sub FetchHandle {
         return;
     }
 
-	my $from = $rs->{from} || die "no from?";
-
     $this->{BASENAME} = "HtmlZ3950";
+
+	my $format = 'usmarc';
 
 #    if ( !defined($req_form) || ( $req_form eq &Net::Z3950::OID::xml ) )
     if (0)
@@ -127,17 +128,45 @@ sub FetchHandle {
     }
     elsif ( $req_form eq &Net::Z3950::OID::unimarc ) {	# FIXME convert to usmarc
         $this->{REP_FORM} = &Net::Z3950::OID::unimarc;
-        $this->{RECORD} = $from->next_marc('unimarc');
+		$format = 'unimarc';
     }
     elsif ( $req_form eq &Net::Z3950::OID::usmarc ) {	# FIXME convert to usmarc
         $this->{REP_FORM} = &Net::Z3950::OID::usmarc;
-        $this->{RECORD} = $from->next_marc('usmarc');
+		$format = 'usmarc';
     }
     else {    ## Unsupported record format
         $this->{ERR_CODE} = 239;
         $this->{ERR_STR}  = $req_form;
         return;
     }
+
+
+	my $from = $rs->{from} || die "no from?";
+	# fetch records up to offset
+	while(  $#{ $rs->{results} } < $offset ) {
+		push @{ $rs->{results} }, $from->next_marc;
+		warn "# rs result ", $#{ $rs->{results} }, " $format\n";
+	}
+
+	my $id = $rs->{results}->[$offset] || die "no id for record $offset in ",Dumper( $rs->{results} );
+
+	my $path = "marc/$id.$format";
+	if ( ! -e $path ) {
+		## Unsupported record format
+        $this->{ERR_CODE} = 239;
+        $this->{ERR_STR}  = $req_form;
+        return;
+    }
+
+	{
+		open(my $in, '<', $path) || die "$path: $!";
+		local $/ = undef;
+		my $marc = <$in>;
+		close($in);
+		$this->{RECORD} = $in;
+	}
+
+
     if ( $offset == $hits ) {
         $this->{LAST} = 1;
     }

@@ -123,28 +123,24 @@ sub next_marc {
 
 	if ( $mech->content =~ m{<pre>\s*(.+?(\d+)\.\s+ID=(\d+).+?)\s*</pre>}s ) {
 
-		my $comarc = $1;
+		my $markup = $1;
 		my $nr = $2;
 		my $id = $3;
 
-diag "fetch_marc $nr [$id] $format";
+diag "fetch $nr [$id] $format";
 
-		$comarc =~ s{</?b>}{}gs;
-		$comarc =~ s{<font[^>]*>}{<s>}gs;
-		$comarc =~ s{</font>}{<e>}gs;
+		$markup =~ s{</?b>}{}gs;
+		$markup =~ s{<font[^>]*>}{<s>}gs;
+		$markup =~ s{</font>}{<e>}gs;
 
-		open(my $out, '>:utf8', "comarc/$id");
-		print $out $comarc;
-		close($out);
+		$markup =~ s/[\r\n]+\s{5}//gs; # join continuation lines
 
-		print $comarc;
+		$self->save_marc( "$id.xml", $markup );
 
 		my $marc = MARC::Record->new;
+		my $comarc = MARC::Record->new;
 
-		$comarc =~ s/[\r\n]+\s{5}//gs; # join continuation lines
-warn "## comarc join: $comarc\n";
-
-		foreach my $line ( split(/[\r\n]+/, $comarc) ) {
+		foreach my $line ( split(/[\r\n]+/, $markup) ) {
 
 			if ( $line !~ s{^(\d\d\d)([01 ])([01 ])}{} ) {
 				diag "SKIP: $line";
@@ -153,37 +149,40 @@ warn "## comarc join: $comarc\n";
 
 				my ( $f, $i1, $i2 ) = ( $1, $2, $3 );
 
-				our $out = undef;
+				our $marc_map = undef;
+				our $comarc_map = undef;
 				our $ignored = undef;
 
-				sub sf_us {
-					my ($format,$f,$sf,$v) = @_;
+				sub sf_parse {
+					my ($f,$sf,$v) = @_;
 
 					$v =~ s/\s+$//;
 
-					if ( $format =~ m/unimarc/i ) {
-						push @{ $out->{ $f } }, ( $sf, $v );
-					} elsif ( $format =~ m/marc/ ) {
-						if ( my $m = $cobiss_marc21->{$f}->{$sf} ) {
-							push @{ $out->{ $m->[0] } }, ( $m->[1], $v );
-						} else {
-							$ignored->{$f}++;
-						}
+					push @{ $comarc_map->{ $f } }, ( $sf, $v );
+					if ( my $m = $cobiss_marc21->{$f}->{$sf} ) {
+						push @{ $marc_map->{ $m->[0] } }, ( $m->[1], $v );
+					} else {
+						$ignored->{$f}++;
 					}
 					return ''; # fix warning
 				}
 				my $l = $line;
-				$l =~ s{<s>(\w)<e>([^<]+)}{sf_us($format,$f,$1, $2)}ges;
+				$l =~ s{<s>(\w)<e>([^<]+)}{sf_parse($f,$1, $2)}ges;
 
-				diag "[$format] $line -> ",dump( $out ) if $out;
+				diag "[$format] $line -> ",dump( $comarc_map, $marc_map ) if $comarc_map;
 
-				foreach my $f ( keys %$out ) {
-					$marc->add_fields( $f, $i1, $i2, @{ $out->{$f} } );
+				foreach my $f ( keys %$comarc_map ) {
+					$comarc->add_fields( $f, $i1, $i2, @{ $comarc_map->{$f} } );
+				}
+
+				foreach my $f ( keys %$marc_map ) {
+					$marc->add_fields( $f, $i1, $i2, @{ $marc_map->{$f} } );
 				}
 			}
 		}
 
-		$self->save_marc( "$id.$format", $marc->as_usmarc );
+		$self->save_marc( "$id.marc", $marc->as_usmarc );
+		$self->save_marc( "$id.unimarc", $comarc->as_usmarc );
 		diag $marc->as_formatted;
 
 		if ( $nr < $self->{hits} ) {
@@ -194,7 +193,7 @@ warn "## comarc join: $comarc\n";
 			warn "# no more results";
 		}
 
-		return $marc->as_usmarc;
+		return $id;
 	} else {
 		die "can't fetch COMARC format from ", $mech->content;
 	}

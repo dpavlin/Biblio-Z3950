@@ -181,7 +181,7 @@ warn "## ++ ", dump( $f, $i1, $i2, @sf );
 
 		my $id = $hash->{SYS} || die "no SYS";
 
-		$self->save_marc( $id, $marc->as_usmarc );
+		$self->save_marc( "$id.marc", $marc->as_usmarc );
 
 		if ( $nr < $self->{hits} ) {
 			$nr++;
@@ -189,7 +189,7 @@ warn "## ++ ", dump( $f, $i1, $i2, @sf );
 			$mech->follow_link( url_regex => qr/set_entry=0*$nr/ );
 		}
 
-		return $marc->as_usmarc;
+		return $id;
 	} else {
 		die "can't fetch COMARC format from ", $mech->content;
 	}
