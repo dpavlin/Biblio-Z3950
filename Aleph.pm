@@ -59,13 +59,16 @@ sub usemap {{
 #	1016	=> '',
 }};
 
+our $session_id;
 
 sub search {
 	my ( $self, $query ) = @_;
 
 	die "need query" unless defined $query;
 
-	my $url = 'http://161.53.240.197:8991/F?RN=' . int rand(1000000000);
+	$session_id ||= int rand(1000000000);
+	# FIXME allocate session just once
+	my $url = 'http://161.53.240.197:8991/F?RN=' . $session_id;
 	# fake JavaScript code on page which creates random session
 
 diag "get $url";
