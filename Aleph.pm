@@ -131,19 +131,37 @@ warn "parse $nr";
 		sub field {
 			my ( $f, $v ) = @_;
 			$v =~ s/\Q&nbsp;\E/ /gs;
-#warn "## $f\t$v\n";
+warn "## $f\t$v\n";
 			$hash->{$f} = $v;
+
+			if ( $f eq 'LDR' ) {
+				$marc->leader( $v );
+				return;
+			}
+
+			if ( $f =~ m/\D/ ) {
+				warn "$f not numeric!";
+				return;
+			}
+
+			if ( $v !~ s/^\|// ) { # no subfields
+				$marc->add_fields( $f, $v );
+warn "## ++ ", dump( $f, $v );
+				return;
+			}
+
 			my ($i1,$i2) = (' ',' ');
 			($i1,$i2) = ($2,$3) if $f =~ s/^(...)(.)?(.)?/$1/;
 			my @sf = split(/\|/, $v);
-			shift @sf;
 			@sf = map { s/^(\w)\s+//; { $1 => $_ } } @sf;
 #warn "## sf = ", dump(@sf);
-			$marc->add_fields( $f, $i1, $i2, @sf ) if $f =~ m/^\d+$/;
+			$marc->add_fields( $f, $i1, $i2, @sf );
+warn "## ++ ", dump( $f, $i1, $i2, @sf );
 		}
 
 		$html =~ s|<tr>\s*<td class=td1 id=bold[^>]*>(.+?)</td>\s*<td class=td1>(.+?)</td>|field($1,$2)|ges;
-#		diag "# hash ",dump($hash);
+		diag "# hash ",dump($hash);
+		diag "# marc ", $marc->as_formatted;
 
 		my $id = $hash->{SYS} || die "no SYS";
 
