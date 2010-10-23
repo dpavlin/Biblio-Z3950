@@ -186,22 +186,21 @@ package Net::Z3950::RPN::And;
 
 sub render {
 	my ($self,$usemap) = @_;
-    my $self = shift;
-    return $self->[0]->render() . ' AND ' . $self->[1]->render();
+    return $self->[0]->render($usemap) . ' AND ' . $self->[1]->render($usemap);
 }
 
 package Net::Z3950::RPN::Or;
 
 sub render {
-    my $self = shift;
-    return $self->[0]->render() . ' OR ' . $self->[1]->render();
+	my ($self,$usemap) = @_;
+    return $self->[0]->render($usemap) . ' OR ' . $self->[1]->render($usemap);
 }
 
 package Net::Z3950::RPN::AndNot;
 
 sub render {
-    my $self = shift;
-    return $self->[0]->render() . ' AND NOT ' . $self->[1]->render();
+	my ($self,$usemap) = @_;
+    return $self->[0]->render($usemap) . ' AND NOT ' . $self->[1]->render($usemap);
 }
 
 package Net::Z3950::RPN::Term;
