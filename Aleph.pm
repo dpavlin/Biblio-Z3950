@@ -82,6 +82,7 @@ diag "submit search $query";
 	$mech->submit_form(
 		fields => {
 			'ccl_term' => $query,
+			'local_base' => $self->{database},
 		},
 	);
 
