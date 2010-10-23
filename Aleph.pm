@@ -115,13 +115,13 @@ sub next_marc {
 
 	my $mech = $self->{mech} || die "no mech?";
 
-print $mech->content;
+#warn "## ", $mech->content;
 
 	if ( $mech->content =~ m{Zapis\s+(\d+)}s ) {
 
 		my $nr = $1;
 
-diag "parse $nr";
+warn "parse $nr";
 
 		$marc = MARC::Record->new;
 		$hash = {};
@@ -131,19 +131,19 @@ diag "parse $nr";
 		sub field {
 			my ( $f, $v ) = @_;
 			$v =~ s/\Q&nbsp;\E/ /gs;
-warn "# $f\t$v\n";
+#warn "## $f\t$v\n";
 			$hash->{$f} = $v;
 			my ($i1,$i2) = (' ',' ');
 			($i1,$i2) = ($2,$3) if $f =~ s/^(...)(.)?(.)?/$1/;
 			my @sf = split(/\|/, $v);
 			shift @sf;
 			@sf = map { s/^(\w)\s+//; { $1 => $_ } } @sf;
-diag "sf = ", dump(@sf);
+#warn "## sf = ", dump(@sf);
 			$marc->add_fields( $f, $i1, $i2, @sf ) if $f =~ m/^\d+$/;
 		}
 
 		$html =~ s|<tr>\s*<td class=td1 id=bold[^>]*>(.+?)</td>\s*<td class=td1>(.+?)</td>|field($1,$2)|ges;
-		diag "# hash ",dump($hash);
+#		diag "# hash ",dump($hash);
 
 		my $id = $hash->{SYS} || die "no SYS";
 
