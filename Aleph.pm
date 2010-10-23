@@ -65,7 +65,7 @@ sub search {
 
 	die "need query" unless defined $query;
 
-	my $url = 'http://161.53.240.197:8991/F?RN=' . rand(1000000000);
+	my $url = 'http://161.53.240.197:8991/F?RN=' . int rand(1000000000);
 	# fake JavaScript code on page which creates random session
 
 diag "get $url";
