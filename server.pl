@@ -69,6 +69,7 @@ diag "search for $query";
 diag "SETNAME $setname REPL_SET $repl_set";
     my $hits;
     unless ( $hits = $from->search( $query ) ) {
+		warn $this->{ERR_STR} = "no results for $query";
         $this->{ERR_CODE} = 108;
         return;
     }
@@ -184,6 +185,7 @@ $z->launch_server( $0, @ARGV );
 package Net::Z3950::RPN::And;
 
 sub render {
+	my ($this,$usemap) = @_;
     my $this = shift;
     return $this->[0]->render() . ' AND ' . $this->[1]->render();
 }
@@ -210,6 +212,8 @@ use COBISS;
 sub render {
 	my ($this,$usemap) = @_;
 
+	die "no usemap" unless $usemap;
+
 warn "# render ", dump($this);
 warn "# usemap ", dump($usemap);
 
@@ -225,6 +229,7 @@ warn "# usemap ", dump($usemap);
             $prefix = $field;
         }
         else {
+			warn "FIXME add $use in usemap  ",dump( $usemap );
             die { errcode => 114, errstr => $use }; ## Unsupported use attribute
         }
     }
