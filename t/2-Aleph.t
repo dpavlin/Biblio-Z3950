@@ -7,7 +7,7 @@ use Test::More tests => 6;
 
 use_ok 'Aleph';
 
-ok( my $o = Aleph->new, 'new' );
+ok( my $o = Aleph->new('ZAG01'), 'new' );
 
 ok( my $hits = $o->search( 'WTI=linux' ), 'search' );
 diag "$hits results";

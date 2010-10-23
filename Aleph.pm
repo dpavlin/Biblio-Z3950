@@ -77,7 +77,9 @@ diag "advanced search";
 
 	$mech->follow_link( url_regex => qr/find-c/ );
 
-diag "submit search $query";
+diag "submit search [$query] on ", $self->{database};
+
+	$self->save_content;
 
 	$mech->submit_form(
 		fields => {

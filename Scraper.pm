@@ -35,4 +35,15 @@ sub save_marc {
 
 }
 
+our $dump_nr = 1;
+
+sub save_content {
+	my $self = shift;
+	my $path = "/tmp/$dump_nr.html";
+	open(my $html, '>', $path);
+	print $html $self->{mech}->content;
+	close($html);
+	warn "# save_content $path ", -s $path, " bytes";
+}
+
 1;
