@@ -1,0 +1,6 @@
+scrape web catalogs and serve them with Z39.50 server
+
+
+This is experimental Z39.50 server based on Net::Z3950::SimpleServer
+and WWW::Mechanize to scrape on-line web catalogues and provide Z39.50
+server which can be used to import records (in Koha for example)
