@@ -141,6 +141,9 @@ diag "fetch_marc $nr [$id] $format";
 
 		my $marc = MARC::Record->new;
 
+		$comarc =~ s/[\r\n]+\s{5}//gs; # join continuation lines
+warn "## comarc join: $comarc\n";
+
 		foreach my $line ( split(/[\r\n]+/, $comarc) ) {
 
 			if ( $line !~ s{^(\d\d\d)([01 ])([01 ])}{} ) {
