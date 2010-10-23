@@ -79,6 +79,7 @@ diag "got $hits hits";
         hits  => $hits,
 		from => $from,
 		results => [ undef ], # we don't use 0 element
+		database => $database,
     };
     my $sets = $session->{SETS};
 
@@ -118,40 +119,33 @@ sub FetchHandle {
 
     $this->{BASENAME} = "HtmlZ3950";
 
-	my $format = 'usmarc';
+	my $format =
+		$req_form eq Net::Z3950::OID::xml()     ? 'xml' :
+		$req_form eq Net::Z3950::OID::unimarc() ? 'unimarc' :
+		$req_form eq Net::Z3950::OID::usmarc()  ? 'marc' : # XXX usmarc -> marc
+		undef;
 
-#    if ( !defined($req_form) || ( $req_form eq &Net::Z3950::OID::xml ) )
-    if (0)
-    {    ## XML records
-        $this->{REP_FORM} = &Net::Z3950::OID::xml;
-        $this->{RECORD}   = '<xml>FIXME: not implementd</xml>';
-    }
-    elsif ( $req_form eq &Net::Z3950::OID::unimarc ) {	# FIXME convert to usmarc
-        $this->{REP_FORM} = &Net::Z3950::OID::unimarc;
-		$format = 'unimarc';
-    }
-    elsif ( $req_form eq &Net::Z3950::OID::usmarc ) {	# FIXME convert to usmarc
-        $this->{REP_FORM} = &Net::Z3950::OID::usmarc;
-		$format = 'usmarc';
-    }
-    else {    ## Unsupported record format
-        $this->{ERR_CODE} = 239;
+	if ( ! $format ) {
+		warn "ERROR: $req_form format not supported";
+        $this->{ERR_CODE} = 239; ## Unsupported record format
         $this->{ERR_STR}  = $req_form;
         return;
-    }
+	}
 
+	$this->{REP_FORM} = $req_form;
 
 	my $from = $rs->{from} || die "no from?";
 	# fetch records up to offset
 	while(  $#{ $rs->{results} } < $offset ) {
 		push @{ $rs->{results} }, $from->next_marc;
-		warn "# rs result ", $#{ $rs->{results} }, " $format\n";
+		warn "# rs result ", $#{ $rs->{results} },"\n";
 	}
 
 	my $id = $rs->{results}->[$offset] || die "no id for record $offset in ",Dumper( $rs->{results} );
 
-	my $path = "marc/$id.$format";
+	my $path = 'marc/' . $rs->{database} . "/$id.$format";
 	if ( ! -e $path ) {
+		warn "ERROR: $path not found";
 		## Unsupported record format
         $this->{ERR_CODE} = 239;
         $this->{ERR_STR}  = $req_form;
@@ -163,7 +157,7 @@ sub FetchHandle {
 		local $/ = undef;
 		my $marc = <$in>;
 		close($in);
-		$this->{RECORD} = $in;
+		$this->{RECORD} = $marc;
 	}
 
 
