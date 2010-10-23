@@ -50,7 +50,7 @@ diag "SearchHandle ",Dumper($this);
 		return;
 	}
 
-	my $from = $module->new;
+	my $from = $module->new( $database );
 
 diag "using $module for $database ", Dumper( $from );
 

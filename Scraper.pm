@@ -6,9 +6,10 @@ use strict;
 use WWW::Mechanize;
 
 sub new {
-    my ( $class ) = @_;
+    my ( $class, $database ) = @_;
     my $self = {
 		mech => WWW::Mechanize->new(),
+		database => $database,
 	};
     bless $self, $class;
     return $self;
@@ -17,7 +18,7 @@ sub new {
 sub save_marc {
 	my ( $self, $id, $marc ) = @_;
 
-	my $database = ref $self;
+	my $database = $self->{database};
 	mkdir 'marc' unless -e 'marc';
 	mkdir "marc/$database" unless -e "marc/$database";
 
