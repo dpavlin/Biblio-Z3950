@@ -24,29 +24,29 @@ sub diag {
 }
 
 sub InitHandle {
-    my $this    = shift;
+    my $self    = shift;
     my $session = {};
 
-    $this->{HANDLE}   = $session;
-    $this->{IMP_NAME} = "Biblio Z39.50";
-    $this->{IMP_VER}  = "0.2";
+    $self->{HANDLE}   = $session;
+    $self->{IMP_NAME} = "Biblio Z39.50";
+    $self->{IMP_VER}  = "0.2";
     $session->{SETS}  = {};
 }
 
 sub SearchHandle {
-    my $this    = shift;
+    my $self    = shift;
 
-diag "SearchHandle ",Dumper($this);
+diag "SearchHandle ",Dumper($self);
 
-    my $session = $this->{HANDLE};
-    my $rpn     = $this->{RPN};
+    my $session = $self->{HANDLE};
+    my $rpn     = $self->{RPN};
     my $query;
 
-	my $database = uc $this->{DATABASES}->[0];
+	my $database = uc $self->{DATABASES}->[0];
 	my $module = $databases->{$database};
 	if ( ! defined $module ) {
-        $this->{ERR_CODE} = 108;
-		warn $this->{ERR_STR} = "$database NOT FOUND in available databases: " . join(" ", keys %$databases);
+        $self->{ERR_CODE} = 108;
+		warn $self->{ERR_STR} = "$database NOT FOUND in available databases: " . join(" ", keys %$databases);
 		return;
 	}
 
@@ -57,20 +57,20 @@ diag "using $module for $database ", Dumper( $from );
 	eval { $query = $rpn->{query}->render( $from->usemap ); };
 	warn "ERROR: $@" if $@;
     if ( $@ && ref($@) ) {    ## Did someone/something report any errors?
-        $this->{ERR_CODE} = $@->{errcode};
-        $this->{ERR_STR}  = $@->{errstr};
+        $self->{ERR_CODE} = $@->{errcode};
+        $self->{ERR_STR}  = $@->{errstr};
         return;
     }
 
 diag "search for $query";
 
-    my $setname  = $this->{SETNAME};
-    my $repl_set = $this->{REPL_SET};
+    my $setname  = $self->{SETNAME};
+    my $repl_set = $self->{REPL_SET};
 diag "SETNAME $setname REPL_SET $repl_set";
     my $hits;
     unless ( $hits = $from->search( $query ) ) {
-		warn $this->{ERR_STR} = "no results for $query";
-        $this->{ERR_CODE} = 108;
+		warn $self->{ERR_STR} = "no results for $query";
+        $self->{ERR_CODE} = 108;
         return;
     }
 diag "got $hits hits";
@@ -85,40 +85,40 @@ diag "got $hits hits";
     my $sets = $session->{SETS};
 
     if ( defined( $sets->{$setname} ) && !$repl_set ) {
-        $this->{ERR_CODE} = 21;
+        $self->{ERR_CODE} = 21;
         return;
     }
     if ( scalar keys %$sets >= $max_result_sets ) {
-        $this->{ERR_CODE} = 112;
-        $this->{ERR_STR}  = "Max number is $max_result_sets";
+        $self->{ERR_CODE} = 112;
+        $self->{ERR_STR}  = "Max number is $max_result_sets";
         return;
     }
     $sets->{$setname} = $rs;
-    $this->{HITS} = $session->{HITS} = $hits;
+    $self->{HITS} = $session->{HITS} = $hits;
     $session->{QUERY} = $query;
 }
 
 sub FetchHandle {
-    my $this     = shift;
-    my $session  = $this->{HANDLE};
-    my $setname  = $this->{SETNAME};
-    my $req_form = $this->{REQ_FORM};
-    my $offset   = $this->{OFFSET};
+    my $self     = shift;
+    my $session  = $self->{HANDLE};
+    my $setname  = $self->{SETNAME};
+    my $req_form = $self->{REQ_FORM};
+    my $offset   = $self->{OFFSET};
     my $sets     = $session->{SETS};
     my $hits     = $session->{HITS};
     my $rs;
     my $record;
 
     if ( !defined( $rs = $sets->{$setname} ) ) {
-        $this->{ERR_CODE} = 30;
+        $self->{ERR_CODE} = 30;
         return;
     }
     if ( $offset > $hits ) {
-        $this->{ERR_CODE} = 13;
+        $self->{ERR_CODE} = 13;
         return;
     }
 
-    $this->{BASENAME} = "HtmlZ3950";
+    $self->{BASENAME} = "HtmlZ3950";
 
 	my $format =
 		$req_form eq Net::Z3950::OID::xml()     ? 'xml' :
@@ -128,12 +128,12 @@ sub FetchHandle {
 
 	if ( ! $format ) {
 		warn "ERROR: $req_form format not supported";
-        $this->{ERR_CODE} = 239; ## Unsupported record format
-        $this->{ERR_STR}  = $req_form;
+        $self->{ERR_CODE} = 239; ## Unsupported record format
+        $self->{ERR_STR}  = $req_form;
         return;
 	}
 
-	$this->{REP_FORM} = $req_form;
+	$self->{REP_FORM} = $req_form;
 
 	my $from = $rs->{from} || die "no from?";
 	# fetch records up to offset
@@ -148,8 +148,8 @@ sub FetchHandle {
 	if ( ! -e $path ) {
 		warn "ERROR: $path not found";
 		## Unsupported record format
-        $this->{ERR_CODE} = 239;
-        $this->{ERR_STR}  = $req_form;
+        $self->{ERR_CODE} = 239;
+        $self->{ERR_STR}  = $req_form;
         return;
     }
 
@@ -158,20 +158,20 @@ sub FetchHandle {
 		local $/ = undef;
 		my $marc = <$in>;
 		close($in);
-		$this->{RECORD} = $marc;
+		$self->{RECORD} = $marc;
 	}
 
 
     if ( $offset == $hits ) {
-        $this->{LAST} = 1;
+        $self->{LAST} = 1;
     }
     else {
-        $this->{LAST} = 0;
+        $self->{LAST} = 0;
     }
 }
 
 sub CloseHandle {
-    my $this = shift;
+    my $self = shift;
 }
 
 my $z = new Net::Z3950::SimpleServer(
@@ -185,23 +185,23 @@ $z->launch_server( $0, @ARGV );
 package Net::Z3950::RPN::And;
 
 sub render {
-	my ($this,$usemap) = @_;
-    my $this = shift;
-    return $this->[0]->render() . ' AND ' . $this->[1]->render();
+	my ($self,$usemap) = @_;
+    my $self = shift;
+    return $self->[0]->render() . ' AND ' . $self->[1]->render();
 }
 
 package Net::Z3950::RPN::Or;
 
 sub render {
-    my $this = shift;
-    return $this->[0]->render() . ' OR ' . $this->[1]->render();
+    my $self = shift;
+    return $self->[0]->render() . ' OR ' . $self->[1]->render();
 }
 
 package Net::Z3950::RPN::AndNot;
 
 sub render {
-    my $this = shift;
-    return $this->[0]->render() . ' AND NOT ' . $this->[1]->render();
+    my $self = shift;
+    return $self->[0]->render() . ' AND NOT ' . $self->[1]->render();
 }
 
 package Net::Z3950::RPN::Term;
@@ -210,16 +210,16 @@ use Data::Dump qw(dump);
 use COBISS;
 
 sub render {
-	my ($this,$usemap) = @_;
+	my ($self,$usemap) = @_;
 
 	die "no usemap" unless $usemap;
 
-warn "# render ", dump($this);
+warn "# render ", dump($self);
 warn "# usemap ", dump($usemap);
 
     my $attributes = {};
     my $prefix     = "";
-    foreach my $attr ( @{ $this->{attributes} } ) {
+    foreach my $attr ( @{ $self->{attributes} } ) {
         my $type  = $attr->{attributeType};
         my $value = $attr->{attributeValue};
         $attributes->{$type} = $value;
@@ -263,7 +263,7 @@ warn "# usemap ", dump($usemap);
         }
     }
 
-    my $q = $prefix . $this->{term};
+    my $q = $prefix . $self->{term};
 	print "# q: $q\n";
 	return $q;
 }
