@@ -86,7 +86,7 @@ diag "submit search $query";
 	);
 
 	my $hits = 0;
-	if ( $mech->content =~ m{ukupno\s+(\d+).*(do\s+(\d+))}s ) {
+	if ( $mech->content =~ m{ukupno\s+(\d+).*do\s+(\d+)}s ) {
 		$hits = $1;
 		$hits = $2 if $2 && $2 < $1; # correct for max. results
 	} else {
