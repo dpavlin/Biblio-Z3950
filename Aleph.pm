@@ -115,7 +115,7 @@ diag "in MARC format";
 
 	$mech->follow_link( url_regex => qr/format=001/ );
 
-	return $hits;
+	return $self->{hits} = $hits;
 }
 
 
@@ -180,9 +180,11 @@ warn "## ++ ", dump( $f, $i1, $i2, @sf );
 
 		$self->save_marc( $id, $marc->as_usmarc );
 
-		$nr++;
-
-		$mech->follow_link( url_regex => qr/set_entry=0*$nr/ );
+		if ( $nr < $self->{hits} ) {
+			$nr++;
+			diag "follow link to next record $nr";
+			$mech->follow_link( url_regex => qr/set_entry=0*$nr/ );
+		}
 
 		return $marc->as_usmarc;
 	} else {
