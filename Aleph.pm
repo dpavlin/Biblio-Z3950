@@ -106,8 +106,12 @@ diag "in MARC format";
 }
 
 
+our ( $hash, $marc );
+
 sub next_marc {
 	my ($self,$format) = @_;
+
+	$format ||= 'marc';
 
 	my $mech = $self->{mech} || die "no mech?";
 
@@ -119,10 +123,10 @@ print $mech->content;
 
 diag "parse $nr";
 
-		my $marc = MARC::Record->new;
+		$marc = MARC::Record->new;
+		$hash = {};
 
 		my $html = $mech->content;
-		my $hash;
 
 		sub field {
 			my ( $f, $v ) = @_;
@@ -139,13 +143,13 @@ diag "sf = ", dump(@sf);
 		}
 
 		$html =~ s|<tr>\s*<td class=td1 id=bold[^>]*>(.+?)</td>\s*<td class=td1>(.+?)</td>|field($1,$2)|ges;
-		diag dump($hash);
+		diag "# hash ",dump($hash);
 
 		my $id = $hash->{SYS} || die "no SYS";
 
 		my $path = "marc/$id.$format";
 
-		open(my $out, '>:utf8', $path);
+		open(my $out, '>:utf8', $path) || die "$path: $!";
 		print $out $marc->as_usmarc;
 		close($out);
 
