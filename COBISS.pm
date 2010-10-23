@@ -167,18 +167,21 @@ warn "## comarc join: $comarc\n";
 
 					my ( $f, $i1, $i2 ) = @f;
 
-					our $out = {};
+					our $out = undef;
+					our $ignored = undef;
 
 					sub sf_us {
 						my ($f,$sf,$v) = @_;
 						if ( my $m = $cobiss_marc21->{$f}->{$sf} ) {
 							push @{ $out->{ $m->[0] } }, ( $m->[1], $v );
+						} else {
+							$ignored->{$f}++;
 						}
-						return;
+						return ''; # fix warning
 					}
 					$line =~ s{<s>(\w)<e>([^<]+)\s*}{sf_us($f,$1, $2)}ges;
 
-					diag "converted marc21 ",dump( $out );
+					diag "converted marc21 ",dump( $out ) if $out;
 
 					foreach my $f ( keys %$out ) {
 						$marc->add_fields( $f, $i1, $i2, @{ $out->{$f} } );
