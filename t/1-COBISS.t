@@ -7,6 +7,14 @@ use Test::More tests => 3;
 
 use_ok 'COBISS';
 
-ok( my $search = COBISS->search( 'TI=book' ), 'search' );
+ok( my $o = COBISS->new, 'new' );
 
-ok( my $marc = COBISS->fetch_marc, 'fetch_marc' );
+ok( my $hits = $o->search( 'TI=book' ), 'search' );
+diag "$hits results";
+
+foreach ( 1 .. 3 ) {
+
+ok( my $marc = $o->next_marc, "next_marc $_" );
+diag $marc;
+
+}
