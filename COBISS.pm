@@ -184,14 +184,7 @@ diag "fetch_marc $nr [$id] $format";
 			}
 		}
 
-		my $path = "marc/$id.$format";
-
-		open($out, '>:utf8', $path);
-		print $out $marc->as_usmarc;
-		close($out);
-
-		diag "created $path ", -s $path, " bytes";
-
+		$self->save_marc( $id, $marc->as_usmarc );
 		diag $marc->as_formatted;
 
 		$nr++;
