@@ -118,7 +118,7 @@ sub FetchHandle {
         return;
     }
 
-    $self->{BASENAME} = "HtmlZ3950";
+    $self->{BASENAME} = $rs->{database};
 
 	my $format =
 		$req_form eq Net::Z3950::OID::xml()     ? 'xml' :
