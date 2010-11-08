@@ -15,9 +15,9 @@ sub diag {
 # Koha Z39.50 query:
 #
 # Bib-1 @and @and @and @and @and @and @and @or
-# @attr 1=8 isbn-issn 
-# @attr 1=7 isbn-issn 
 # @attr 1=4 title 
+# @attr 1=7 isbn
+# @attr 1=8 issn 
 # @attr 1=1003 author 
 # @attr 1=16 dewey 
 # @attr 1=21 subject-holding 
@@ -51,7 +51,9 @@ sub diag {
 
 sub usemap {{
 	4		=> 'WTI',
-	1003	=> 'AUT',
+	7		=> 'ISBN',
+	8		=> 'ISSN',
+	1003		=> 'AUT',
 	16		=> 'DDC',
 	21		=> 'SUB',
 	12		=> 'LCN',
@@ -68,7 +70,7 @@ sub search {
 
 	$session_id ||= int rand(1000000000);
 	# FIXME allocate session just once
-	my $url = 'http://161.53.240.197:8992/F?RN=' . $session_id;
+	my $url = 'http://161.53.240.197:8991/F?RN=' . $session_id;
 	# fake JavaScript code on page which creates random session
 
 diag "get $url";
