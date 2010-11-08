@@ -103,9 +103,11 @@ diag "submit search [$query] on ", $self->{database};
 	);
 
 	my $hits = 0;
-	if ( $mech->content =~ m{ukupno\s+(\d+).*do\s+(\d+)}s ) {
+	if ( $mech->content =~ m{ukupno\s+(\d+).*do\s+(\d+)}s ) { # FIXME Many results in Crotian
 		$hits = $1;
 		$hits = $2 if $2 && $2 < $1; # correct for max. results
+	} elsif ( $mech->content =~ m{(\d+)\s+od\s+(\d+)}s ) { # FIXME single result in Croatian
+		$hits = $2;
 	} else {
 		diag "get't find results in ", $mech->content;
 		return;
