@@ -265,7 +265,7 @@ warn "# usemap ", dump($usemap);
         }
     }
 
-    my $q = $prefix . $self->{term};
+    my $q = $prefix . $self->{term} . '*';
 	print "# q: $q\n";
 	return $q;
 }
