@@ -8,6 +8,7 @@ use Net::Z3950::OID;
 use Data::Dumper;
 use COBISS;
 use Aleph;
+use Encode;
 
 my $databases = {
 	'COBISS' => 'COBISS',
@@ -61,6 +62,8 @@ diag "using $module for $database ", Dumper( $from );
         $self->{ERR_STR}  = $@->{errstr};
         return;
     }
+
+	$query = decode('utf-8', $query); # FIXME Zoom encoding
 
 diag "search for $query";
 
