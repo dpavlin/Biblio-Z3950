@@ -95,7 +95,8 @@ sub search {
 
 	die "need query" unless defined $query;
 
-	my $url = 'http://cobiss.izum.si/scripts/cobiss?ukaz=GETID&lani=en';
+#	my $url = 'http://cobiss.izum.si/scripts/cobiss?ukaz=GETID&lani=en';
+	my $url = 'http://www.cobiss.ba/scripts/cobiss?ukaz=GETID&lani=en';
 
 diag "get $url";
 
