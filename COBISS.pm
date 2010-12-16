@@ -37,9 +37,9 @@ sub diag {
 # Koha Z39.50 query:
 #
 # Bib-1 @and @and @and @and @and @and @and @or
-# @attr 1=8 isbn-issn 
-# @attr 1=7 isbn-issn 
 # @attr 1=4 title 
+# @attr 1=7 isbn
+# @attr 1=8 issn 
 # @attr 1=1003 author 
 # @attr 1=16 dewey 
 # @attr 1=21 subject-holding 
@@ -47,11 +47,41 @@ sub diag {
 # @attr 1=1007 standard-id 
 # @attr 1=1016 any
 
+
+# AU=	Autor - osoba
+# CB=	Autor - korporacija
+# CL=	Zbirka
+# CP=	Mesto sast./dod. nazivu korp.
+# PP=	Mesto izdanja
+# PU=	Izdavač
+# PY=	Godina izdanja
+# P2=	Zaključna godina izdanja
+# TI=	Naslov
+# TO=	Naslov originala
+# BN=	ISBN
+# SN=	ISSN uz članak
+# SP=	ISSN
+# PN=	Predmetna odrednica - lično ime
+# CS=	Predm. odred. - naziv korporacije
+# DU=	Slobodno oblikovane predm. odred.
+# SU=	Predmetne odrednice - sve
+# AC=	Kod za vrstu autorstva
+# CC=	Kod za vrstu sadržaja
+# CO=	Zemlja/regija izdavanja
+# FC=	Šifra organizacije
+# LA=	Jezik teksta
+# LC=	Kod za književni oblik
+# LO=	Jezik izvornog dela
+# TA=	Kod za predviđene korisnike
+# TD=	Tipologija dok./dela
+# UC=	UDK za pretraživanje
+# KW=	Ključne reči
+
 sub usemap {{
-	8		=> 'BN',	# FIXME check
-	7		=> 'SN',	# FIXME check
+	7		=> 'BN',	# FIXME check
+	8		=> 'SP',	# FIXME check
 	4		=> 'TI',
-	1003	=> 'TI',
+	1003	=> 'AU',
 	16		=> 'CU',
 	21		=> 'SU',
 #	12		=> '',
