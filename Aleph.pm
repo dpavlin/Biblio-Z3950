@@ -70,7 +70,7 @@ sub search {
 
 	$session_id ||= int rand(1000000000);
 	# FIXME allocate session just once
-	my $url = 'http://161.53.240.197:8991/F?RN=' . $session_id;
+	my $url = 'http://katalog.nsk.hr/F?RN=' . $session_id;
 	# fake JavaScript code on page which creates random session
 
 diag "get $url";
