@@ -127,7 +127,7 @@ sub FetchHandle {
 		$req_form eq Net::Z3950::OID::xml()     ? 'xml' :
 		$req_form eq Net::Z3950::OID::unimarc() ? 'unimarc' :
 		$req_form eq Net::Z3950::OID::usmarc()  ? 'marc' : # XXX usmarc -> marc
-		undef;
+		die "unknown format $req_form";
 
 	if ( ! $format ) {
 		warn "ERROR: $req_form format not supported";
