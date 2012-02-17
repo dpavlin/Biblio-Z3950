@@ -143,6 +143,7 @@ sub next_marc {
 warn "parse $nr";
 
 		$marc = MARC::Record->new;
+		$marc->encoding('utf-8');
 		$hash = {};
 
 		my $html = $mech->content;
