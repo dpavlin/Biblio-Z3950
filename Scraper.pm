@@ -44,6 +44,7 @@ sub save_content {
 	print $html $self->{mech}->content;
 	close($html);
 	warn "# save_content $path ", -s $path, " bytes";
+	$dump_nr++;
 }
 
 1;
