@@ -1,0 +1,5 @@
+open localhost:9999/GOOGLEBOOKS
+find "Croatia"
+show 1+3
+
+quit

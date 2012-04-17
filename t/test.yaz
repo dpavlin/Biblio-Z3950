@@ -8,4 +8,8 @@ open localhost:9999/NSK01
 find "linux"
 show 1+3
 
+open localhost:9999/GoogleBooks
+find "Croatia"
+show 1+10
+
 quit
