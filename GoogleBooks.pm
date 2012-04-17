@@ -100,16 +100,69 @@ sub next_marc {
 
 	warn "# item = ",dump($item) if $debug;
 
+	my $id = $item->{id} || die "no id";
+
 	$marc = MARC::Record->new;
 	$marc->encoding('utf-8');
 
+	if ( my $vi = $item->{volumeInfo} ) {
+
+		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+
+		$marc->add_fields('008',sprintf("%02d%02d%02ds%04d%25s%-3s",
+				$year % 100, $mon + 1, $mday, $vi->{publishedDate}, ' ', $vi->{language}));
+
+		$marc->add_fields('020',' ',' ','a' => $_ ) foreach map { $_->{identifier} } @{ $vi->{industryIdentifiers} };
+
+		my $first_author = shift @{ $vi->{authors} };
+		$marc->add_fields(100,'0',' ','a' => $first_author );
+		$marc->add_fields(700,'0',' ','a' => $_ ) foreach @{ $vi->{authors} };
+		$marc->add_fields(245, ($first_author ? '1':'0') ,' ',
+			'a' => $vi->{title},
+			'b' => $vi->{subtitle},
+		);
+		$marc->add_fields(260,' ',' ',
+			'b' => $vi->{publisher},
+			'c' => $vi->{publishedDate},
+		);
+		$marc->add_fields(300,' ',' ','a' => $vi->{pageCount} . 'p.' );
+		
+		$marc->add_fields(520,' ',' ','a' => $vi->{description} );
+		$marc->add_fields(650,' ','4','a' => $_ ) foreach @{ $vi->{categories} };
+
+		$marc->add_fields(856,'4','2',
+			'3'=> 'Image link',
+			'u' => $vi->{imageLinks}->{smallThumbnail},
+			'x' => 'smallThumbnail',
+		);
+		$marc->add_fields(856,'4','2',
+			'3'=> 'Image link',
+			'u' => $vi->{imageLinks}->{thumbnail},
+			'x' => 'thumbnail',
+		);
+		$marc->add_fields(856,'4','2',
+			'3'=> 'Info link',
+			'u' => $vi->{infoLink},
+		);
+		$marc->add_fields(856,'4','2',
+			'3'=> 'Show reviews link',
+			'u' => $vi->{showReviewsLink},
+		);
+
+		my $leader = $marc->leader;
+		warn "# leader [$leader]";
+		$leader =~ s/^(....).../$1nam/;
+		$marc->leader( $leader );
+
+	} else {
+		warn "ERROR: no volumeInfo in ",dump($item);
+	}
+
 	$marc->add_fields( 856, ' ', ' ', 'u' => $item->{accessInfo}->{webReaderLink} );
-	$marc->add_fields( 520, ' ', ' ', 'a' => $item->{searchInfo}->{textSnippet} );
+#	$marc->add_fields( 520, ' ', ' ', 'a' => $item->{searchInfo}->{textSnippet} ); # duplicate of description
 
 #	diag "# hash ",dump($hash);
 	diag "# marc ", $marc->as_formatted;
-
-	my $id = $item->{id} || die "no id";
 
 	$self->save_marc( "$id.marc", $marc->as_usmarc );
 
