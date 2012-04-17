@@ -11,7 +11,7 @@ use Aleph;
 use Encode;
 
 my $databases = {
-	'COBISS' => 'COBISS',
+#	'COBISS' => 'COBISS',
 	'NSK01'  => 'Aleph',
 	'NSK10'  => 'Aleph',
 	'ZAG01'  => 'Aleph',
