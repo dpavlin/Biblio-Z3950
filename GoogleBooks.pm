@@ -110,36 +110,58 @@ sub next_marc {
 		my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 
 		$marc->add_fields('008',sprintf("%02d%02d%02ds%04d%25s%-3s",
-				$year % 100, $mon + 1, $mday, $vi->{publishedDate}, ' ', $vi->{language}));
+				$year % 100, $mon + 1, $mday, substr($vi->{publishedDate},0,4), ' ', $vi->{language}));
 
-		$marc->add_fields('020',' ',' ','a' => $_ ) foreach map { $_->{identifier} } @{ $vi->{industryIdentifiers} };
+		if ( ref $vi->{industryIdentifiers} eq 'ARRAY' ) {
+			foreach my $i ( @{ $vi->{industryIdentifiers} } ) {
+				if ( $i->{type} =~ m/ISBN/i ) {
+					$marc->add_fields('020',' ',' ','a' => $i->{identifier} )
+				} else {
+					$marc->add_fields('035',' ',' ','a' => $i->{identifier} )
+				}
+			}
+		}
 
-		my $first_author = shift @{ $vi->{authors} };
-		$marc->add_fields(100,'0',' ','a' => $first_author );
-		$marc->add_fields(700,'0',' ','a' => $_ ) foreach @{ $vi->{authors} };
+		my $first_author;
+		if ( ref $vi->{authors} eq 'ARRAY' ) {
+			$first_author = shift @{ $vi->{authors} };
+			$marc->add_fields(100,'0',' ','a' => $first_author );
+			$marc->add_fields(700,'0',' ','a' => $_ ) foreach @{ $vi->{authors} };
+		}
+
 		$marc->add_fields(245, ($first_author ? '1':'0') ,' ',
 			'a' => $vi->{title},
-			'b' => $vi->{subtitle},
+			$vi->{subtitle} ? ( 'b' => $vi->{subtitle} ) : (),
 		);
-		$marc->add_fields(260,' ',' ',
-			'b' => $vi->{publisher},
-			'c' => $vi->{publishedDate},
-		);
-		$marc->add_fields(300,' ',' ','a' => $vi->{pageCount} . 'p.' );
-		
-		$marc->add_fields(520,' ',' ','a' => $vi->{description} );
-		$marc->add_fields(650,' ','4','a' => $_ ) foreach @{ $vi->{categories} };
 
-		$marc->add_fields(856,'4','2',
-			'3'=> 'Image link',
-			'u' => $vi->{imageLinks}->{smallThumbnail},
-			'x' => 'smallThumbnail',
+		$marc->add_fields(260,' ',' ',
+			$vi->{publisher} ? ( 'b' => $vi->{publisher} ) : (),
+			$vi->{publishedDate} ? ( 'c' => $vi->{publishedDate} ) : ()
 		);
-		$marc->add_fields(856,'4','2',
-			'3'=> 'Image link',
-			'u' => $vi->{imageLinks}->{thumbnail},
-			'x' => 'thumbnail',
-		);
+
+		$marc->add_fields(300,' ',' ','a' => $vi->{pageCount} . 'p.' ) if $vi->{pageCount};
+		
+		$marc->add_fields(520,' ',' ','a' => $vi->{description} ) if $vi->{description};
+
+ 		if ( ref $vi->{categories} eq 'ARRAY' ) {
+			$marc->add_fields(650,' ','4','a' => $_ ) foreach @{ $vi->{categories} };
+		}
+
+		if ( exists $vi->{imageLinks} ) {
+
+			$marc->add_fields(856,'4','2',
+				'3'=> 'Image link',
+				'u' => $vi->{imageLinks}->{smallThumbnail},
+				'x' => 'smallThumbnail',
+			) if exists $vi->{imageLinks}->{smallThumbnail};
+			$marc->add_fields(856,'4','2',
+				'3'=> 'Image link',
+				'u' => $vi->{imageLinks}->{thumbnail},
+				'x' => 'thumbnail',
+			) if exists $vi->{imageLinks}->{thumbnail};
+
+		} # if imageLinks
+
 		$marc->add_fields(856,'4','2',
 			'3'=> 'Info link',
 			'u' => $vi->{infoLink},
