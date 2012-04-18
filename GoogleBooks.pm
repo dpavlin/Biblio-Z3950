@@ -134,10 +134,12 @@ sub next_marc {
 			$vi->{subtitle} ? ( 'b' => $vi->{subtitle} ) : (),
 		);
 
-		$marc->add_fields(260,' ',' ',
-			$vi->{publisher} ? ( 'b' => $vi->{publisher} ) : (),
-			$vi->{publishedDate} ? ( 'c' => $vi->{publishedDate} ) : ()
-		);
+		if ( exists $vi->{publisher} or exists $vi->{publishedDate} ) {
+			$marc->add_fields(260,' ',' ',
+				$vi->{publisher} ? ( 'b' => $vi->{publisher} ) : (),
+				$vi->{publishedDate} ? ( 'c' => $vi->{publishedDate} ) : ()
+			);
+		}
 
 		$marc->add_fields(300,' ',' ','a' => $vi->{pageCount} . 'p.' ) if $vi->{pageCount};
 		
