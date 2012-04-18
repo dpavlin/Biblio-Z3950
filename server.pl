@@ -21,7 +21,7 @@ my $databases = {
 	'GOOGLEBOOKS' => 'GoogleBooks',
 };
 
-my $max_records = 3; # XXX configure this
+my $max_records = 10; # XXX configure this
 my $max_result_sets = 10;
 
 sub diag {
