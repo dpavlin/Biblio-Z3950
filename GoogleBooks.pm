@@ -89,8 +89,6 @@ diag "got $hits results, get first one";
 }
 
 
-our ( $hash, $marc );
-
 sub next_marc {
 	my ($self,$format) = @_;
 
@@ -102,7 +100,7 @@ sub next_marc {
 
 	my $id = $item->{id} || die "no id";
 
-	$marc = MARC::Record->new;
+	my $marc = MARC::Record->new;
 	$marc->encoding('utf-8');
 
 	if ( my $vi = $item->{volumeInfo} ) {
