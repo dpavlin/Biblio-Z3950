@@ -1,0 +1,5 @@
+open localhost:9999/HATHITRUST
+find "Croatia"
+show 1+3
+
+quit

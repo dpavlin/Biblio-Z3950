@@ -9,6 +9,7 @@ use Data::Dumper;
 use COBISS;
 use Aleph;
 use GoogleBooks;
+use vuFind;
 
 use Encode;
 
@@ -19,6 +20,7 @@ my $databases = {
 	'NSK10'  => 'Aleph',
 	'ZAG01'  => 'Aleph',
 	'GOOGLEBOOKS' => 'GoogleBooks',
+	'HATHITRUST' => 'vuFind',
 };
 
 my $max_records = 3; # XXX configure this
