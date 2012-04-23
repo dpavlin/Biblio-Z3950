@@ -18,6 +18,8 @@ sub new {
     return $self;
 }
 
+sub mech { $_[0]->{mech} }
+
 sub save_marc {
 	my ( $self, $id, $marc ) = @_;
 
