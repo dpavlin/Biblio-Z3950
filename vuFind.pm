@@ -64,13 +64,20 @@ diag "get $url";
 
 diag "got $hits results";
 
-	foreach my $link ( $self->mech->find_all_links( url_regex => qr{/Record/\d+} ) ) {
-		push @{ $self->{records} }, $link->url;
-	}
+	$self->populate_records;
 
 	return $self->{hits} = $hits;
 }
 
+sub populate_records {
+	my ($self) = @_;
+
+	foreach my $link ( $self->mech->find_all_links( url_regex => qr{/Record/\d+} ) ) {
+		my $url = $link->url;
+		push @{ $self->{records} }, $url;
+		warn "## ++ $url\n";
+	}
+}
 
 sub next_marc {
 	my ($self,$format) = @_;
@@ -79,6 +86,18 @@ sub next_marc {
 
 	my $url = shift @{ $self->{records} };
 
+	if ( ! $url ) {
+		diag "fetch next page";
+		$self->save_content;
+		$self->mech->follow_link( text_regex => qr/Next/ );
+		$self->populate_records;
+		$url = shift @{ $self->{records} };
+		if ( ! $url ) {
+			warn "ERROR no more results\n";
+			return;
+		}
+	}
+
 	my $id = $1 if $url =~ m{Record/(\d+)};
 
 	$self->mech->get( $url . '.mrc' );
@@ -86,6 +105,8 @@ sub next_marc {
 	my $marc = decode('utf-8', $self->mech->content );
 
 	$self->save_marc( "$id.marc", $marc );
+
+	$self->mech->back; # return to search results for next page
 
 	return $id;
 
