@@ -6,6 +6,7 @@ use strict;
 use MARC::Record;
 use Data::Dump qw/dump/;
 use JSON::XS;
+use Encode;
 
 use base 'Scraper';
 
@@ -82,7 +83,9 @@ sub next_marc {
 
 	$self->mech->get( $url . '.mrc' );
 
-	$self->save_marc( "$id.marc", $self->mech->content );
+	my $marc = decode('utf-8', $self->mech->content );
+
+	$self->save_marc( "$id.marc", $marc );
 
 	return $id;
 
