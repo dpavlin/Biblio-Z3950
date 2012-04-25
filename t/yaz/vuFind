@@ -1,0 +1,5 @@
+open localhost:9999/HATHITRUST
+find @or @attr 1=4 "Krleža" @attr 1=1003 krleža
+show 1+25
+
+quit

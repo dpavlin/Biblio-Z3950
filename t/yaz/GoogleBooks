@@ -1,5 +1,5 @@
 open localhost:9999/GOOGLEBOOKS
-find "Croatia"
+find @and @attr 1=4 "Krleža" @attr 1=1003 krleža
 show 1+3
 
 quit

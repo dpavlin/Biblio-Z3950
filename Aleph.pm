@@ -50,15 +50,15 @@ sub diag {
 # WYR - Godina izdavanja
 
 sub usemap {{
-	4		=> 'WTI',
-	7		=> 'ISBN',
-	8		=> 'ISSN',
-	1003		=> 'AUT',
-	16		=> 'DDC',
-	21		=> 'SUB',
-	12		=> 'LCN',
+	4		=> 'WTI=',
+	7		=> 'ISBN=',
+	8		=> 'ISSN=',
+	1003	=> 'AUT=',
+	16		=> 'DDC=',
+	21		=> 'SUB=',
+	12		=> 'LCN=',
 #	1007	=> '',
-	1016	=> 'WRD',
+	1016	=> 'WRD=',
 }};
 
 our $session_id;
