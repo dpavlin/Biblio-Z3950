@@ -6,7 +6,7 @@ use strict;
 use Net::Z3950::SimpleServer;
 use Net::Z3950::OID;
 use Data::Dumper;
-use COBISS;
+#use COBISS;
 use Aleph;
 use GoogleBooks;
 use vuFind;
@@ -279,7 +279,7 @@ warn "# usemap ", dump($usemap);
 		warn "# using custom prefix_term query";
 		$q = $usemap->{prefix_term}->( $prefix, $self->{term} );
 	} else {
-    	$q = ( $prefix ? $prefix . '=' : '' ) . $self->{term} . '*';
+    	$q = $prefix . $self->{term} . '*';
 	}
 	print "# q: $q\n";
 	return $q;
