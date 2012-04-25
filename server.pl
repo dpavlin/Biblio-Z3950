@@ -195,21 +195,27 @@ package Net::Z3950::RPN::And;
 
 sub render {
 	my ($self,$usemap) = @_;
-    return $self->[0]->render($usemap) . ' AND ' . $self->[1]->render($usemap);
+    return $self->[0]->render($usemap)
+		. ( $usemap->{RPN}->{And} || ' AND ' )
+		. $self->[1]->render($usemap);
 }
 
 package Net::Z3950::RPN::Or;
 
 sub render {
 	my ($self,$usemap) = @_;
-    return $self->[0]->render($usemap) . ' OR ' . $self->[1]->render($usemap);
+    return $self->[0]->render($usemap)
+		. ( $usemap->{RPN}->{Or} || ' OR ' )
+		. $self->[1]->render($usemap);
 }
 
 package Net::Z3950::RPN::AndNot;
 
 sub render {
 	my ($self,$usemap) = @_;
-    return $self->[0]->render($usemap) . ' AND NOT ' . $self->[1]->render($usemap);
+    return $self->[0]->render($usemap)
+		. ( $usemap->{RPN}->{Or} || ' AND NOT ' )
+		. $self->[1]->render($usemap);
 }
 
 package Net::Z3950::RPN::Term;
@@ -263,14 +269,18 @@ warn "# usemap ", dump($usemap);
     my $comp = $attributes->{6};
     if ($prefix) {
         if ( defined($comp) && ( $comp >= 2 ) ) {
-            $prefix = "all$prefix= ";
-        }
-        else {
-            $prefix = "$prefix=";
+            $prefix = "all$prefix"; # FIXME?
         }
     }
 
-    my $q = $prefix . $self->{term} . '*';
+	my $q;
+
+	if ( $usemap->{prefix_term} ) {
+		warn "# using custom prefix_term query";
+		$q = $usemap->{prefix_term}->( $prefix, $self->{term} );
+	} else {
+    	$q = ( $prefix ? $prefix . '=' : '' ) . $self->{term} . '*';
+	}
 	print "# q: $q\n";
 	return $q;
 }

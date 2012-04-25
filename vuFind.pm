@@ -39,6 +39,15 @@ sub usemap {{
 #	12		=> '',
 #	1007	=> '',
 	1016	=> 'all',
+
+	RPN => {
+		And => '&bool[]=AND&',
+		Or  => '&bool[]=OR&',
+	},
+	prefix_term => sub {
+		my ( $prefix, $term ) = @_;
+		return 'type[]=' . $prefix . '&lookfor[]=' . $term;
+	}
 }};
 
 sub search {
@@ -47,7 +56,7 @@ sub search {
 	die "need query" unless defined $query;
 
 	# http://catalog.hathitrust.org/Search/Home?lookfor=croatia%20AND%20zagreb&type=title
-	my $url = 'http://catalog.hathitrust.org/Search/Home?lookfor=' . $query;
+	my $url = 'http://catalog.hathitrust.org/Search/Home?' . $query;
 
 diag "get $url";
 
