@@ -215,7 +215,6 @@ sub render {
 package Net::Z3950::RPN::Term;
 
 use Data::Dump qw(dump);
-use COBISS;
 
 sub render {
 	my ($self,$usemap) = @_;
