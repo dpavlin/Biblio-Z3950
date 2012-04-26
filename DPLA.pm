@@ -151,10 +151,18 @@ sub next_marc {
 
 	diag "# marc ", $marc->as_formatted;
 
-	my $id = $item->{'dpla.id'} || warn "no dpla.id in ",dump($item);
-	$self->save_marc( "$id.marc", $marc->as_usmarc );
+	warn dump( $marc->as_usmarc );
 
 	$self->mech->back; # return to search results for next page
+
+	my $id = $item->{'dpla.id'};
+
+	if ( ! $id ) {
+			warn "no dpla.id in ",dump($item);
+			return;
+	}
+
+	$self->save_marc( "$id.marc", $marc->as_usmarc );
 
 	return $id;
 

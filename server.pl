@@ -149,7 +149,9 @@ sub FetchHandle {
 	my $from = $rs->{from} || die "no from?";
 	# fetch records up to offset
 	while(  $#{ $rs->{results} } < $offset ) {
-		push @{ $rs->{results} }, $from->next_marc;
+		my $marc = $from->next_marc;
+		last if ! $marc; # abort results
+		push @{ $rs->{results} }, $marc;
 		warn "# rs result ", $#{ $rs->{results} },"\n";
 	}
 
