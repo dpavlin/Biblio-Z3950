@@ -10,6 +10,7 @@ use Data::Dumper;
 use Aleph;
 use GoogleBooks;
 use vuFind;
+use DPLA;
 
 use Encode;
 
@@ -21,6 +22,7 @@ my $databases = {
 	'ZAG01'  => 'Aleph',
 	'GOOGLEBOOKS' => 'GoogleBooks',
 	'HATHITRUST' => 'vuFind',
+	'DPLA'   => 'DPLA',
 };
 
 my $max_records = 3; # XXX configure this
