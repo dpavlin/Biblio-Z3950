@@ -54,7 +54,7 @@ sub diag {
 # @attr 1=1016 any
 
 sub usemap {{
-	4		=> 'dpla.title',
+	4		=> 'dpla.title_keyword',
 	7		=> 'dpla.isbn',
 	8		=> 'dpla.keyword', # XXX fake
 	1003	=> 'dpla.creator_keyword',
