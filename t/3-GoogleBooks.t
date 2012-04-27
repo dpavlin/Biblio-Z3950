@@ -5,7 +5,7 @@ use strict;
 
 use Test::More tests => 14;
 
-my $search = join(' ', @ARGV) || 'croatia';
+my $search = join(' ', @ARGV) || 'krleža';
 
 use_ok 'GoogleBooks';
 
