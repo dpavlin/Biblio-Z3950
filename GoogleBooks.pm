@@ -9,6 +9,9 @@ use JSON::XS;
 
 use base 'Scraper';
 
+my $pageCount_suffix = 'p.'; # English
+$pageCount_suffix = ' str.'; # Croatian
+
 my $debug = $ENV{DEBUG} || 0;
 
 sub diag {
@@ -132,12 +135,14 @@ sub next_marc {
 			$vi->{subtitle} ? ( 'b' => $vi->{subtitle} ) : (),
 		);
 
-		$marc->add_fields(260,' ',' ',
-			$vi->{publisher} ? ( 'b' => $vi->{publisher} ) : (),
-			$vi->{publishedDate} ? ( 'c' => $vi->{publishedDate} ) : ()
-		);
+		if ( exists $vi->{publisher} or exists $vi->{publishedDate} ) {
+			$marc->add_fields(260,' ',' ',
+				$vi->{publisher} ? ( 'b' => $vi->{publisher} ) : (),
+				$vi->{publishedDate} ? ( 'c' => $vi->{publishedDate} ) : ()
+			);
+		}
 
-		$marc->add_fields(300,' ',' ','a' => $vi->{pageCount} . 'p.' ) if $vi->{pageCount};
+		$marc->add_fields(300,' ',' ','a' => $vi->{pageCount} . $pageCount_suffix ) if $vi->{pageCount};
 		
 		$marc->add_fields(520,' ',' ','a' => $vi->{description} ) if $vi->{description};
 
