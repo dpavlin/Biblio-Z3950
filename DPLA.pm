@@ -139,7 +139,7 @@ sub next_marc {
 				$fields->[$i]->[0] = $f;
 				$fields->[$i]->[1] = ' ';
 				$fields->[$i]->[2] = ' ';
-				push @{ $fields->[$i] }, $sf, $v->[$i];
+				push @{ $fields->[$i] }, $sf, decode('utf-8', $v->[$i]); # decode here fixes API encoding error
 			}
 
 		} else {
