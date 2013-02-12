@@ -284,7 +284,7 @@ warn "# usemap ", dump($usemap);
 		warn "# using custom prefix_term query";
 		$q = $usemap->{prefix_term}->( $prefix, $self->{term} );
 	} else {
-    	$q = $prefix . $self->{term} . '*';
+		$q = $prefix . $self->{term} . '*';
 	}
 	print "# q: $q\n";
 	return $q;
