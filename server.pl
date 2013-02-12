@@ -268,7 +268,8 @@ warn "# usemap ", dump($usemap);
         }
     }
     if ( defined( $attributes->{5} ) ) {                ## No truncation
-        die { errcode => 113, errstr => 5 };
+#	die { errcode => 113, errstr => 5 };
+	warn "# truncation is ignored";
     }
     my $comp = $attributes->{6};
     if ($prefix) {
