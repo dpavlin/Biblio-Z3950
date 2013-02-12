@@ -64,7 +64,7 @@ diag "SearchHandle ",Dumper($self);
 diag "using $module for $database ", Dumper( $from );
 
 	eval { $query = $rpn->{query}->render( $from->usemap ); };
-	warn "ERROR: $@" if $@;
+	warn "ERROR: ", Dumper($@) if $@;
     if ( $@ && ref($@) ) {    ## Did someone/something report any errors?
         $self->{ERR_CODE} = $@->{errcode};
         $self->{ERR_STR}  = $@->{errstr};
