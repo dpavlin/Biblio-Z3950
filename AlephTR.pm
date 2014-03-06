@@ -148,7 +148,7 @@ warn "## $f\t[$v]\n";
 			}
 
 			if ( $v !~ s/^\|// ) { # no subfields
-				$marc->add_fields( $f, $v );
+				$marc->add_fields( $f, $v ) unless $f >= 900;
 warn "## ++ ", dump( $f, $v );
 				return;
 			}
