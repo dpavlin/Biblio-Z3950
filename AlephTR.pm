@@ -1,4 +1,4 @@
-package Aleph;
+package AlephTR;
 
 use warnings;
 use strict;
@@ -70,44 +70,25 @@ sub search {
 
 	$session_id ||= int rand(1000000000);
 	# FIXME allocate session just once
-	my $url = 'http://katalog.nsk.hr/F?RN=' . $session_id;
+	my $url = 'http://mksun.mkutup.gov.tr/F?RN=' . $session_id . '&func=find-c-0';
 	# fake JavaScript code on page which creates random session
 
-diag "get $url";
+diag "advanced search $url";
 
 	my $mech = $self->{mech} || die "no mech?";
 	$mech->get( $url );
 
-diag "advanced search";
-
-	$mech->follow_link( url_regex => qr/find-c/ );
-
-	my $database = $self->{database};
-
-	if ( $mech->content =~ m{Requested library is unavailable at the moment} ) {
-		warn "ERROR: default database not available, try to swith to $database\n";
-		$self->save_content;
-		$mech->follow_link( url_regex => qr/local_base=$database/i );
-		diag "re-try advanced search";
-		$mech->follow_link( url_regex => qr/find-c/ );
-	}
-
-diag "submit search [$query] on ", $self->{database};
-
+diag "submit search [$query]";
 
 	$mech->submit_form(
 		fields => {
 			'ccl_term' => $query,
-			'local_base' => $self->{database},
 		},
 	);
 
 	my $hits = 0;
-	if ( $mech->content =~ m{ukupno\s+(\d+).*do\s+(\d+)} ) { # FIXME Many results in Crotian
+	if ( $mech->content =~ m{Toplam\s+(\d+)} ) { # FIXME Many results in Crotian
 		$hits = $1;
-		$hits = $2 if $2 && $2 < $1; # correct for max. results
-	} elsif ( $mech->content =~ m{(\d+)\s+od\s+(\d+)} ) { # FIXME single result in Croatian
-		$hits = $2;
 	} else {
 		diag "get't find results in ", $mech->content;
 		return;
@@ -136,7 +117,7 @@ sub next_marc {
 
 #warn "## ", $mech->content;
 
-	if ( $mech->content =~ m{Zapis\s+(\d+)}s ) {
+	if ( $mech->content =~ m{kay.ttan\s+(\d+)}s ) {
 
 		my $nr = $1;
 
@@ -148,11 +129,13 @@ warn "parse $nr";
 
 		my $html = $mech->content;
 
+#diag $html;
+
 		sub field {
 			my ( $f, $v ) = @_;
 			$v =~ s/\Q&nbsp;\E/ /gs;
 			$v =~ s/\s+$//gs;
-warn "## $f\t$v\n";
+warn "## $f\t[$v]\n";
 			$hash->{$f} = $v;
 
 			if ( $f eq 'LDR' ) {
@@ -172,7 +155,7 @@ warn "## ++ ", dump( $f, $v );
 			}
 
 			my ($i1,$i2) = (' ',' ');
-			($i1,$i2) = ($2,$3) if $f =~ s/^(...)(.)?(.)?/$1/;
+			($i1,$i2) = ($2,$3 || ' ') if $f =~ s/^(...)(.)(.)?/$1/;
 			my @sf = split(/\|/, $v);
 			@sf = map { s/^(\w)\s+//; { $1 => $_ } } @sf;
 #warn "## sf = ", dump(@sf);
@@ -180,7 +163,7 @@ warn "## ++ ", dump( $f, $v );
 warn "## ++ ", dump( $f, $i1, $i2, @sf );
 		}
 
-		$html =~ s|<tr>\s*<td class=td1 id=bold[^>]*>(.+?)</td>\s*<td class=td1>(.+?)</td>|field($1,$2)|ges;
+		$html =~ s|<tr>\s*?<td[^>]*class=td1[^>]*>(.+?)</td>\s*?<td class=td1>(.+?)</td>\s*</tr>|field($1,$2)|ges;
 		diag "# hash ",dump($hash);
 		diag "# marc ", $marc->as_formatted;
 
@@ -196,7 +179,7 @@ warn "## ++ ", dump( $f, $i1, $i2, @sf );
 
 		return $id;
 	} else {
-		die "can't fetch COMARC format from ", $mech->content;
+		die "can't fetch " . __PACKAGE__ . " format from ", $mech->content;
 	}
 
 }

@@ -5,9 +5,9 @@ use strict;
 
 use Test::More tests => 6;
 
-use_ok 'Aleph';
+use_ok 'AlephTR';
 
-ok( my $o = Aleph->new('ZAG01'), 'new' );
+ok( my $o = AlephTR->new(), 'new' );
 
 ok( my $hits = $o->search( 'WTI=linux' ), 'search' );
 diag "$hits results";
