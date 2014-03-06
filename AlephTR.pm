@@ -129,12 +129,8 @@ warn "parse $nr";
 
 		my $html = $mech->content;
 
-#diag $html;
-
 		sub field {
 			my ( $f, $v ) = @_;
-
-			return if $f >= 900; # skip local fields
 
 			$v =~ s/\Q&nbsp;\E/ /gs;
 			$v =~ s/\s+$//gs;
@@ -158,20 +154,18 @@ warn "## ++ ", dump( $f, $v );
 			}
 
 			my ($i1,$i2) = (' ',' ');
-			($i1,$i2) = ($2,$3) if $f =~ s/^(...)(.)(.)?/$1/;
+			($i1,$i2) = ($2,$3) if $f =~ s/^(...)(.)?(.)?/$1/;
 			my @sf = split(/\|/, $v);
 			@sf = map { s/^(\w)\s+//; { $1 => $_ } } @sf;
 #warn "## sf = ", dump(@sf);
 			$i1 ||= ' ';
 			$i2 ||= ' ';
-			eval {
-				$marc->add_fields( $f, $i1, $i2, @sf );
+			$marc->add_fields( $f, $i1, $i2, @sf ) unless $f >= 900;
 warn "## ++ ", dump( $f, $i1, $i2, @sf );
-			};
-			warn "SKIP: $@" if $@;
 		}
 
-		$html =~ s|<tr>\s*?<td[^>]*class=td1[^>]*>(.+?)</td>\s*?<td class=td1>(.+?)</td>\s*</tr>|field($1,$2)|ges;
+		$html =~ s|<tr>\s*?<td[^>]*class=td1[^>]*>(.+?)</td>\s*?<td class=td1>(.+?)</td>\s*?</tr>|field($1,$2)|ges;
+
 		diag "# hash ",dump($hash);
 		diag "# marc ", $marc->as_formatted;
 
