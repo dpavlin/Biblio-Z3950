@@ -133,6 +133,9 @@ warn "parse $nr";
 
 		sub field {
 			my ( $f, $v ) = @_;
+
+			return if $f >= 900; # skip local fields
+
 			$v =~ s/\Q&nbsp;\E/ /gs;
 			$v =~ s/\s+$//gs;
 warn "## $f\t[$v]\n";
@@ -155,12 +158,17 @@ warn "## ++ ", dump( $f, $v );
 			}
 
 			my ($i1,$i2) = (' ',' ');
-			($i1,$i2) = ($2,$3 || ' ') if $f =~ s/^(...)(.)(.)?/$1/;
+			($i1,$i2) = ($2,$3) if $f =~ s/^(...)(.)(.)?/$1/;
 			my @sf = split(/\|/, $v);
 			@sf = map { s/^(\w)\s+//; { $1 => $_ } } @sf;
 #warn "## sf = ", dump(@sf);
-			$marc->add_fields( $f, $i1, $i2, @sf );
+			$i1 ||= ' ';
+			$i2 ||= ' ';
+			eval {
+				$marc->add_fields( $f, $i1, $i2, @sf );
 warn "## ++ ", dump( $f, $i1, $i2, @sf );
+			};
+			warn "SKIP: $@" if $@;
 		}
 
 		$html =~ s|<tr>\s*?<td[^>]*class=td1[^>]*>(.+?)</td>\s*?<td class=td1>(.+?)</td>\s*</tr>|field($1,$2)|ges;
