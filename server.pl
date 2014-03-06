@@ -11,6 +11,7 @@ use Aleph;
 use GoogleBooks;
 use vuFind;
 use DPLA;
+use AlephTR;
 
 use Encode;
 
@@ -23,6 +24,7 @@ my $databases = {
 	'GOOGLEBOOKS' => 'GoogleBooks',
 	'HATHITRUST' => 'vuFind',
 	'DPLA'   => 'DPLA',
+	'MKUTUP' => 'AlephTR',
 };
 
 my $max_records = 10; # XXX configure this
