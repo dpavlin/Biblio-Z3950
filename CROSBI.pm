@@ -6,6 +6,7 @@ use strict;
 use MARC::Record;
 use Data::Dump qw/dump/;
 use DBI;
+use utf8;
 
 use base 'Scraper';
 
@@ -49,6 +50,9 @@ my $dbname = 'bibliografija';
 
 sub search {
 	my ( $self, $query ) = @_;
+
+	utf8::decode( $query );
+	warn "QUERY",dump( $query );
 
 	die "need query" unless defined $query;
 
@@ -370,7 +374,7 @@ sub next_marc {
 		);
 	}
 	push @f942, t => '1.01' if $row->{kategorija} =~ m/Znanstveni/;
-	push @f942, t => '1.01' if $row->{kategorija} =~ m/Strucni/;
+	push @f942, t => '1.04' if $row->{kategorija} =~ m/Strucni/;
 
 	$marc->add_fields(942,' ',' ',
 		@f942,
