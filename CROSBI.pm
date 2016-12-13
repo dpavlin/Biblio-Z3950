@@ -148,6 +148,8 @@ sub next_marc {
 
 	my $leader = $marc->leader;
 
+# /srv/webpac2/conf/crosbi/2016-12-12/casopis-dbi2marc.pl
+
 ## LDR 05 - n - new
 ## LDR 06 - a - language material 
 ## LDR 07 - a - monographic component part 
@@ -203,7 +205,54 @@ sub next_marc {
 	
 	$marc->add_fields('008', $f008); # FIXME - mglavica check
 
-# /srv/webpac2/conf/crosbi/2016-12-12/casopis-dbi2marc.pl
+
+	if ( my $doi = $row->{doi} ) {
+
+		$marc->add_fields('024','7',' ',
+			2 => 'doi',
+			a => $doi,
+		);
+
+	}
+
+### 035$
+
+## marc 035a - System Number 
+## polje moze  sadrzavati slova i razmake
+## moguc problem u pretrazivanju ako ima zagrade, kako bi trebalo po standardu
+
+	$marc->add_fields('035',' ',' ',
+		a => join('', '(CROSBI)', $row->{id})
+	);
+
+### 040
+## za sve je isti
+
+	$marc->add_fields('040',' ',' ',
+		'a' => 'HR-ZaFF',
+		'b' => 'hrv',
+		'c' => 'HR-ZaFF',
+		'e' => 'ppiak'
+	);
+
+### 041 - indikatori
+# i1=0 - Item not a translation/does not include a translation
+# i1=1 - Item is or includes a translation
+# i1=' ' - No information provided
+
+### 041
+# ponovljivo potpolje (041a) - marc_repeatable_subfield
+# koristi se kad ima vise od jednog jezika, ili kad se radi o prijevodu
+
+	$marc->add_fields('041',' ',' ', map {
+		( a => lc($_) )
+	} split(/-/, $row->{jezik}));
+
+
+### 080
+### 245 indikatori
+## i1 = 0 zza anonimne publikacije, i1 = 1 ako postoji 700 ili 710
+## i2 = pretpostavlja se na temelju clana na pocetku naslova i jezika
 
 	my ( $first_author, $authors ) = split(/ ;\s*/,$row->{autori});
 
