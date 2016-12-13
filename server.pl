@@ -27,6 +27,8 @@ my $databases = {
 	'DPLA'   => 'DPLA',
 	'MKUTUP' => 'AlephTR',
 	'CROSBI' => 'CROSBI',
+	'CROSBI-CASOPIS' => 'CROSBI',
+	'CROSBI-PREPRINT' => 'CROSBI',
 };
 
 my $max_records = 10; # XXX configure this

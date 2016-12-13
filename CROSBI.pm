@@ -58,10 +58,13 @@ sub search {
 
 	my $tsquery = join(' & ', split(/\s+/,$query) );
 
+	my $table = lc $self->{database};
+	$table =~ s/^crosbi-//g;
+
 	my $sql = qq{
 
 select *
-from casopis
+from $table
 inner join rad_ustanova using (id)
 left outer join rad_napomena using (id)
 left outer join rad_projekt using (id)
@@ -77,11 +80,9 @@ where rad_ustanova.sifra = ? and (
 
 	my $dbh = DBI->connect_cached("dbi:Pg:dbname=$dbname", '', '', {AutoCommit => 0});
 
-	my $sth = $dbh->prepare( $sql );
-
 warn "XXX SQL = ",$sql;
 
-#-- and naslov like ?
+	my $sth = $dbh->prepare( $sql );
 
 	$sth->execute(
 		130, # FIXME ustanova
