@@ -23,7 +23,7 @@ sub diag {
 # @attr 1=7 isbn
 # @attr 1=8 issn 
 # @attr 1=1003 author 
-# @attr 1=16 dewey 
+# @attr 1=16 dewey (godina)
 # @attr 1=21 subject-holding 
 # @attr 1=12 control-no 
 # @attr 1=1007 standard-id 
@@ -63,6 +63,7 @@ from casopis
 inner join rad_ustanova using (id)
 left outer join rad_napomena using (id)
 left outer join rad_projekt using (id)
+left outer join rad_godina using (id)
 where sifra = ? and (
 	   fti_au @@ to_tsquery(?)
 	or fti_pr @@ to_tsquery(?)
@@ -91,6 +92,43 @@ warn "XXX SQL = ",$sql;
 	return $self->{hits} = $hits;
 }
 
+my $langrecode008 = {
+        'bugarski' => 'bul',
+	'Češki' => 'cze',
+	'češki' => 'cze',
+        'ENG' => 'eng',
+        'Esperanto' => 'epo',
+        'FRA' => 'fra',
+        'GER' => 'ger',
+        'HRV' => 'hrv',
+        'ITA' => 'ita',
+	'Japanski' => 'jpn',
+        'Latinski' => 'lat',
+        'mađarski' => 'hun',
+	'Madžarski' => 'hun',
+        'Makedonski' => 'mac',
+        'nizozemski' => 'dut',
+        'Poljski' => 'pol',
+        'poljski' => 'pol',
+        'Portugalski' => 'por',
+        'portugalski' => 'por',
+        'RUS' => 'rus',
+        'Rumunjski' => 'rum',
+        'rumunjski' => 'rum',
+        'rusinski' => 'sla',
+        'slovački' => 'slo',
+	'slovenski' => 'slv',
+        'SLV' => 'slv',
+        'SPA' => 'spa',
+        'Srpski' => 'srp',
+        'srpski' => 'srp',
+        'Turski' => 'tur',
+        'turski' => 'tur',
+        'ukrajinski' => 'ukr',
+        'HRV-ENG' => 'mul',
+        'HRV-GER' => 'mul',
+	'hrvatsko-francuski' => 'mul',
+} ;
 
 sub next_marc {
 	my ($self,$format) = @_;
@@ -110,11 +148,60 @@ sub next_marc {
 
 	my $leader = $marc->leader;
 
-	warn "# leader [$leader]";
-	#$leader =~ s/^(....).../$1na$biblevel/;
-	$marc->leader( $leader );
+## LDR 05 - n - new
+## LDR 06 - a - language material 
+## LDR 07 - a - monographic component part 
 
-	my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+	$leader =~ s/^(....).../$1naa/;
+
+## LDR 17 - Encoding level ; 7 - minimal level, u - unknown
+## LDR 18 - i = isbd ; u = unknown
+
+	$leader =~ s/^(.{17})/$1uu/;
+
+	$marc->leader( $leader );
+	warn "# leader [$leader]";
+
+
+### 008 - All materials
+
+## 008 - 00-05 - Date entered on file 
+
+	my $f008 = $1 . $2 . $3 if $row->{time_date} =~ m/\d\d(\d\d)-(\d\d)-(\d\d)/;
+
+## 008 06 - Type of date/Publication status
+
+	$f008 .= 's';
+
+## 008 07-10 - Date 1
+
+ 	$f008 .= substr($row->{datum},0,4);
+
+## 008 11-14 - Date 2 
+
+	#$f008 .= '    ';
+
+	$f008 .= ' ' x ( 15 - length($f008) ); # pad to 15 position
+## 008 15-17 - Place of publication, production, or execution - ako nema 102, popunjava se s |
+	$f008 .= 'xx ';
+
+## 008 35-37 - Language
+	$f008 .= ' ' x ( 35 - length($f008) ); # pad to 35 position
+	if ( my $lng = $langrecode008->{ $row->{jezik} } ) {
+		$f008 .= $lng;
+	} else {
+		warn "INFO unknown jezik [$row->{jezik}] insert into langrecode008!";
+		#$f008 .= '   ';
+	}
+	$f008 .= ' ' x ( 38 - length($f008) );
+## 008 38 - Modified record
+	$f008 .= '|';
+## 008 39 - Cataloging source - d (other)
+	$f008 .= 'd';
+
+	warn "# 008 ",length($f008);
+	
+	$marc->add_fields('008', $f008); # FIXME - mglavica check
 
 # /srv/webpac2/conf/crosbi/2016-12-12/casopis-dbi2marc.pl
 

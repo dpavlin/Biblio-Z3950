@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 5;
+use Test::More tests => 7;
 
 my $search = join(' ', @ARGV) || 'denis bratko';
 
@@ -16,7 +16,7 @@ like $hits, qr/^\d+$/, "hits: $hits";
 
 diag "SQL", $o->{sql};
 
-foreach ( 1 .. $hits ) {
+foreach ( 1 .. 3 ) {
 
 	ok( my $marc = $o->next_marc, "next_marc $_" );
 	diag $marc;
