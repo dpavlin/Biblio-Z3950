@@ -12,6 +12,7 @@ use GoogleBooks;
 use vuFind;
 use DPLA;
 use AlephTR;
+use CROSBI;
 
 use Encode;
 
@@ -25,6 +26,7 @@ my $databases = {
 	'HATHITRUST' => 'vuFind',
 	'DPLA'   => 'DPLA',
 	'MKUTUP' => 'AlephTR',
+	'CROSBI' => 'CROSBI',
 };
 
 my $max_records = 10; # XXX configure this

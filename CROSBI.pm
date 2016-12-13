@@ -47,8 +47,6 @@ sub usemap {{
 
 my $dbname = 'bibliografija';
 
-my $dbh = DBI->connect("dbi:Pg:dbname=$dbname", '', '', {AutoCommit => 0});
-
 sub search {
 	my ( $self, $query ) = @_;
 
@@ -72,6 +70,8 @@ where rad_ustanova.sifra = ? and (
 )
 
 	};
+
+	my $dbh = DBI->connect_cached("dbi:Pg:dbname=$dbname", '', '', {AutoCommit => 0});
 
 	my $sth = $dbh->prepare( $sql );
 
@@ -146,7 +146,7 @@ sub next_marc {
 	my $id = $row->{id} || die "no id";
 
 	my $marc = MARC::Record->new;
-	$marc->encoding('utf-8');
+	$marc->encoding('UTF-8');
 
 	my $leader = $marc->leader;
 
@@ -156,12 +156,12 @@ sub next_marc {
 ## LDR 06 - a - language material 
 ## LDR 07 - a - monographic component part 
 
-	$leader =~ s/^(....).../$1naa/;
+	$leader =~ s/^(....)...(.+)/$1naa$2/;
 
 ## LDR 17 - Encoding level ; 7 - minimal level, u - unknown
 ## LDR 18 - i = isbd ; u = unknown
 
-	$leader =~ s/^(.{17})/$1uu/;
+	$leader =~ s/^(.{17})..(.+)/$1uu$2/;
 
 	$marc->leader( $leader );
 	warn "# leader [$leader]";
@@ -360,17 +360,20 @@ sub next_marc {
 		);
 	}
 
-	$marc->add_fields(942,' ',' ',
-		c => 'CLA',
-	$row->{status_rada} ? (
+	my @f942 = (
+		c => 'CLA'
+	);
+	if ( $row->{status_rada} ) {
+		push @f942, (
 		f => 1,
 		g => $row->{status_rada}
-	) : (),
-	$row->{kategorija} =~ m/Znanstveni/ ? (
-		t => '1.01'
-	) : $row->{kategorija} =~ m/Strucni/ ? (
-		t => '1.04'
-	) : (),
+		);
+	}
+	push @f942, t => '1.01' if $row->{kategorija} =~ m/Znanstveni/;
+	push @f942, t => '1.01' if $row->{kategorija} =~ m/Strucni/;
+
+	$marc->add_fields(942,' ',' ',
+		@f942,
 		u => '1',
 		z => join(' - ', $row->{kategorija}, $row->{vrsta_rada}),
 	);
