@@ -64,7 +64,9 @@ inner join rad_ustanova using (id)
 left outer join rad_napomena using (id)
 left outer join rad_projekt using (id)
 left outer join rad_godina using (id)
-where sifra = ? and (
+left outer join rad_podrucje using (id)
+left outer join url using (id)
+where rad_ustanova.sifra = ? and (
 	   fti_au @@ to_tsquery(?)
 	or fti_pr @@ to_tsquery(?)
 )
@@ -299,6 +301,78 @@ sub next_marc {
 
 	$marc->add_fields(520,' ',' ',
 		a => substr($row->{sazetak}, 0, 9999)
+	);
+
+
+	if ( $row->{rad_projekt} ) {
+		$marc->add_fields(536,' ',' ',
+			a => 'Projekt MZOS',
+			f => 'projekt',
+		);
+	}
+
+	$marc->add_fields(546,' ',' ',
+		a => $row->{jezik}
+	);
+
+	$marc->add_fields(690,' ',' ',
+		a => $row->{sifra}
+	);
+
+
+	$marc->add_fields(693,' ',' ',
+		a => $row->{kljucne_rijeci},
+		1 => 'hrv',
+		2 => 'crosbi',
+	);
+	$marc->add_fields(693,' ',' ',
+		a => $row->{key_words},
+		1 => 'eng',
+		2 => 'crosbi',
+	);
+
+	if ( $row->{autori} =~ m/ ; / ) {
+		my @a = split(/ ; /, $row->{autori});
+		shift @a; # skip first
+		$marc->add_fields(700,'1',' ',
+			a => $_,
+			4 => 'aut'
+		) foreach @a;
+	}
+
+
+	$marc->add_fields(773,'0',' ',
+		t => $row->{casopis},
+		x => $row->{issn},
+		g => "$row->{volumen}, ($row->{godina}), str. $row->{stranica_prva}-$row->{stranica_zadnja}",
+	);
+
+	if ( my $file = $row->{datoteka} ) {
+		$marc->add_fields(856,' ',' ',
+			u => "http://bib.irb.hr/datoteka/$file",
+		);
+	};
+
+	foreach my $name (qw( openurl url )) {
+		next if ! $row->{$name};
+		$marc->add_fields(856,' ',' ',
+			u => $row->{$name},
+		);
+	}
+
+	$marc->add_fields(942,' ',' ',
+		c => 'CLA',
+	$row->{status_rada} ? (
+		f => 1,
+		g => $row->{status_rada}
+	) : (),
+	$row->{kategorija} =~ m/Znanstveni/ ? (
+		t => '1.01'
+	) : $row->{kategorija} =~ m/Strucni/ ? (
+		t => '1.04'
+	) : (),
+		u => '1',
+		z => join(' - ', $row->{kategorija}, $row->{vrsta_rada}),
 	);
 
 =for later
