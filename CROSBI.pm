@@ -34,7 +34,7 @@ sub usemap {{
 	4		=> '',
 	7		=> '',
 	8		=> '',
-	1003	=> '',
+	1003		=> 'fti_au:',
 #	16		=> '',
 	21		=> '',
 	12		=> '',
@@ -56,6 +56,9 @@ sub search {
 
 	die "need query" unless defined $query;
 
+	my $fti = $1 if $query =~ s/^(fti_\w\w)://;
+	$fti ||= 'fti_pr';
+
 	my $tsquery = join(' & ', split(/\s+/,$query) );
 
 	my $table = lc $self->{database};
@@ -71,10 +74,8 @@ left outer join rad_projekt using (id)
 left outer join rad_godina using (id)
 left outer join rad_podrucje using (id)
 left outer join url using (id)
-where rad_ustanova.sifra = ? and (
-	   fti_au @@ to_tsquery(?)
-	or fti_pr @@ to_tsquery(?)
-)
+where rad_ustanova.sifra = ?
+and $fti @@ to_tsquery(?)
 
 	};
 
@@ -87,8 +88,6 @@ warn "XXX SQL = ",$sql;
 	$sth->execute(
 		130, # FIXME ustanova
 		$tsquery,
-		$tsquery,
-#		, '%' . $query . '%'
 	);
 
 	$self->{_sth} = $sth;

@@ -19,6 +19,8 @@ like $hits, qr/^\d+$/, "hits: $hits";
 
 diag "SQL", $o->{sql};
 
+$hits = 3 unless $ENV{DEBUG};
+
 foreach ( 1 .. $hits ) {
 
 	ok( my $marc = $o->next_marc, "next_marc $_" );
