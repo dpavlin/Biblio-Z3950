@@ -286,8 +286,18 @@ sub next_marc {
 		'a' => $row->{title}
 	);
 
+	sub page_range {
+		my ( $prefix, $from, $to ) = @_;
+		my $out;
+		if ( $from ) {
+			$out = $prefix . $from;
+			$out .= '-' . $to if $to;
+		}
+		return $out;
+	}
+
 	$marc->add_fields(300,' ',' ',
-		a => join('-', $row->{stranica_prva}, $row->{stranica_zadnja}),
+		a => page_range('',$row->{stranica_prva},$row->{stranica_zadnja}),
 		f => 'str.'
 	);
 
@@ -344,11 +354,10 @@ sub next_marc {
 		) foreach @a;
 	}
 
-
 	$marc->add_fields(773,'0',' ',
 		t => $row->{casopis},
 		x => $row->{issn},
-		g => "$row->{volumen} ($row->{godina}), $row->{broj} ; str. " . join('-',$row->{stranica_prva}, $row->{stranica_zadnja}),
+		g => "$row->{volumen} ($row->{godina}), $row->{broj} ;" . page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
 	);
 
 	if ( my $file = $row->{datoteka} ) {
