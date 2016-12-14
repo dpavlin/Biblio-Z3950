@@ -63,7 +63,7 @@ sub search {
 
 	my $sql = qq{
 
-select *
+select distinct *
 from $table
 inner join rad_ustanova using (id)
 left outer join rad_napomena using (id)
@@ -174,6 +174,13 @@ sub next_marc {
 	my $sth = $self->{_sth} || die "no _sth";
 
 	my $row = $sth->fetchrow_hashref;
+
+	while ( $self->{_deduplicate}->{ $row->{id} } ) {
+		warn "DUPLICATE $row->{id}, skipping\n";
+		$row = $sth->fetchrow_hashref;
+		return unless $row;
+	}
+	$self->{_deduplicate}->{ $row->{id} }++;
 
 	die "no row" unless $row;
 
