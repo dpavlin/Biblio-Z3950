@@ -69,25 +69,27 @@ left outer join rad_projekt using (id)
 left outer join rad_godina using (id)
 left outer join rad_podrucje using (id)
 left outer join url using (id)
-where rad_ustanova.sifra = ?
 	};
 
-	my @exec = (
-		130, # FIXME ustanova
-	);
+	my @and = ( qq{ rad_ustanova.sifra = ? } );
+	my @exec =  ( 130 ); # FIXME ustanova
 
-	if ( $query =~ s/^(fti_.+):// ) {
-		my $tsquery = join(' & ', split(/\s+/,$query) );
+	foreach my $and ( split(/ AND /, $query) ) {
 
-		my @or;
-		foreach my $f ( split(/,/,$1) ) {
-			push @or, "$f @@ to_tsquery(?)";
-			push @exec, $tsquery;
-		};
-		$sql .= "and ( " . join(" or ", @or) . ")";
-	} else {
-		warn "INVALID QUERY [$query]";
+		if ( $and =~ s/^(fti_.+):// ) {
+			my $tsquery = join(' & ', split(/\s+/,$and) );
+
+			my @or;
+			foreach my $f ( split(/,/,$1) ) {
+				push @or, "$f @@ to_tsquery(?)";
+				push @exec, $tsquery;
+			};
+			push @and, "( " . join(" or ", @or) . ")";
+		} else {
+			warn "INVALID QUERY [$query]";
+		}
 	}
+	$sql .= "where " . join(" and ", @and);
 
 warn "XXX SQL = ",$sql, dump( @exec );
 
