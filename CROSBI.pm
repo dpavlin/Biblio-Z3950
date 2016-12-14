@@ -31,15 +31,15 @@ sub diag {
 # @attr 1=1016 any
 
 sub usemap {{
-	4		=> '',
-	7		=> '',
-	8		=> '',
+	4		=> 'fti_pr:',
+	7		=> 'fti_pr:',
+	8		=> 'fti_pr:',
 	1003		=> 'fti_au:',
-#	16		=> '',
-	21		=> '',
-	12		=> '',
-#	1007	=> '',
-	1016	=> '',
+	16		=> 'fti_pr:',
+	21		=> 'fti_pr:',
+	12		=> 'fti_pr:',
+	1007		=> 'pti_pr:',
+	1016		=> 'fti_au,fti_pr:',
 }};
 
 =for sql
@@ -56,11 +56,6 @@ sub search {
 
 	die "need query" unless defined $query;
 
-	my $fti = $1 if $query =~ s/^(fti_\w\w)://;
-	$fti ||= 'fti_pr';
-
-	my $tsquery = join(' & ', split(/\s+/,$query) );
-
 	my $table = lc $self->{database};
 	$table =~ s/^crosbi-//g;
 
@@ -75,25 +70,38 @@ left outer join rad_godina using (id)
 left outer join rad_podrucje using (id)
 left outer join url using (id)
 where rad_ustanova.sifra = ?
-and $fti @@ to_tsquery(?)
-
 	};
+
+	my @exec = (
+		130, # FIXME ustanova
+	);
+
+	if ( $query =~ s/^(fti_.+):// ) {
+		my $tsquery = join(' & ', split(/\s+/,$query) );
+
+		my @or;
+		foreach my $f ( split(/,/,$1) ) {
+			push @or, "$f @@ to_tsquery(?)";
+			push @exec, $tsquery;
+		};
+		$sql .= "and ( " . join(" or ", @or) . ")";
+	} else {
+		warn "INVALID QUERY [$query]";
+	}
+
+warn "XXX SQL = ",$sql, dump( @exec );
 
 	my $dbh = DBI->connect_cached("dbi:Pg:dbname=$dbname", '', '', {AutoCommit => 0});
 
-warn "XXX SQL = ",$sql;
-
 	my $sth = $dbh->prepare( $sql );
 
-	$sth->execute(
-		130, # FIXME ustanova
-		$tsquery,
-	);
+	$sth->execute( @exec );
 
-	$self->{_sth} = $sth;
 	my $hits = $sth->rows;
 
-	warn "# [$tsquery] $hits hits\n";
+	$self->{_sth} = $sth;
+
+	warn "# [$query] $hits hits\n";
 
 	return $self->{hits} = $hits;
 }

@@ -3,9 +3,9 @@
 use warnings;
 use strict;
 
-use Test::More tests => 7;
+use Test::More tests => 11;
 
-my $search = join(' ', @ARGV) || 'denis bratko';
+my $search = join(' ', @ARGV) || 'fti_au:denis bratko';
 
 use_ok 'CROSBI';
 
@@ -29,3 +29,4 @@ foreach ( 1 .. $hits ) {
 }
 
 } # database
+
