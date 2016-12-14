@@ -47,6 +47,8 @@ sub usemap {{
 =cut
 
 my $dbname = 'bibliografija';
+my @and;
+my @exec;
 
 sub search {
 	my ( $self, $query ) = @_;
@@ -71,24 +73,42 @@ left outer join rad_podrucje using (id)
 left outer join url using (id)
 	};
 
-	my @and = ( qq{ rad_ustanova.sifra = ? } );
-	my @exec =  ( 130 ); # FIXME ustanova
+	@and = ( qq{ rad_ustanova.sifra = ? } );
+	@exec =  ( 130 ); # FIXME ustanova
 
-	foreach my $and ( split(/ AND /, $query) ) {
+		sub parse_fti {
+			my $query = shift;
+			warn "## parse_fti [$query]";
+			my $fti;
+			if ( $query =~ s/^(fti_.+):// ) {
+				$fti = $1;
+			} else {
+				warn "INVALID QUERY no fti_xxx: [$query]";
+			}
 
-		if ( $and =~ s/^(fti_.+):// ) {
-			my $tsquery = join(' & ', split(/\s+/,$and) );
+			my $tsquery = join(' & ', split(/\s+/,$query) );
 
 			my @or;
-			foreach my $f ( split(/,/,$1) ) {
+			foreach my $f ( split(/,/,$fti) ) {
 				push @or, "$f @@ to_tsquery(?)";
 				push @exec, $tsquery;
 			};
 			push @and, "( " . join(" or ", @or) . ")";
-		} else {
-			warn "INVALID QUERY [$query]";
 		}
+
+	if ( $query =~ / AND / ) {
+		foreach my $and ( split(/ AND /, $query) ) {
+			parse_fti $and;
+		}
+	} elsif ( $query =~ m/fti_.+:/ ) {
+		parse_fti $query;
+	} else { # no " AND " in query
+		my $tsquery = join(' & ', split(/\s+/,$query) );
+		push @and, "( fti_au @@ to_tsquery(?) or fti_pr @@ to_tsquery(?) )";
+		push @exec, $tsquery,  $tsquery;
 	}
+
+
 	$sql .= "where " . join(" and ", @and);
 
 warn "XXX SQL = ",$sql, dump( @exec );
@@ -409,7 +429,7 @@ sub next_marc {
 =cut
 
 #	diag "# hash ",dump($hash);
-	diag "# marc\n", $marc->as_formatted;
+	diag "# marc\n", $marc->as_formatted if $ENV{DEBUG};
 
 	$self->save_marc( "$id.marc", $marc->as_usmarc );
 
