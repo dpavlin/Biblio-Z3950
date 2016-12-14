@@ -38,7 +38,7 @@ sub usemap {{
 	16		=> 'fti_pr:',
 	21		=> 'fti_pr:',
 	12		=> 'fti_pr:',
-	1007		=> 'pti_pr:',
+	1007		=> 'fti_pr:',
 	1016		=> 'fti_au,fti_pr:',
 }};
 
@@ -325,6 +325,11 @@ sub next_marc {
 		}
 		return $out;
 	}
+
+	# fake date for Koha import
+	$marc->add_fields(260,' ',' ',
+		c => $row->{godina},
+	);
 
 	$marc->add_fields(300,' ',' ',
 		a => page_range('',$row->{stranica_prva},$row->{stranica_zadnja}),
