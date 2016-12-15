@@ -199,12 +199,12 @@ sub next_marc {
 ## LDR 06 - a - language material 
 ## LDR 07 - a - monographic component part 
 
-	$leader =~ s/^(....)...(.+)/$1naa$2/;
+	$leader =~ s/^(.....)...(.+)/$1naa$2/;
 
 ## LDR 17 - Encoding level ; 7 - minimal level, u - unknown
 ## LDR 18 - i = isbd ; u = unknown
 
-	$leader =~ s/^(.{17})..(.+)/$1uu$2/;
+	$leader =~ s/^(.{17})..(.+)/$1ui$2/;
 
 	$marc->leader( $leader );
 	warn "# leader [$leader]";
