@@ -416,7 +416,7 @@ sub next_marc {
 			my $delimiter = shift @_;
 			my ( $before,$after ) = ( '', '' );
 			( $before, $value, $after ) = @$value if ( ref $value eq 'ARRAY' );
-			$out .= $last_delimiter . $value if $value;
+			$out .= $last_delimiter . $before . $value . $after if $value;
 			$last_delimiter = $delimiter || last;
 		}
 		warn "### [$out]";
