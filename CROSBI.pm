@@ -8,6 +8,7 @@ use Data::Dump qw/dump/;
 use DBI;
 use utf8;
 
+use Scraper;
 use base 'Scraper';
 
 my $debug = $ENV{DEBUG} || 0;
@@ -99,7 +100,7 @@ inner join rad_ustanova using (id) -- sifra
 
 			my @or;
 			foreach my $f ( split(/,/,$fti) ) {
-				push @or, "$f @@ to_tsquery(?)";
+				push @or, "$f @@ to_tsquery('english',?)";
 				push @exec, $tsquery;
 			};
 			push @and, "( " . join(" or ", @or) . ")";
@@ -113,7 +114,7 @@ inner join rad_ustanova using (id) -- sifra
 		parse_fti $query;
 	} else { # no " AND " in query
 		my $tsquery = join(' & ', split(/\s+/,$query) );
-		push @and, "( fti_au @@ to_tsquery(?) or fti_pr @@ to_tsquery(?) )";
+		push @and, "( fti_au @@ to_tsquery('english',?) or fti_pr @@ to_tsquery('english',?) )";
 		push @exec, $tsquery,  $tsquery;
 	}
 
