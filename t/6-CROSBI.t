@@ -11,7 +11,7 @@ use_ok 'CROSBI';
 
 ok( my $o = CROSBI->new(), 'new' );
 
-foreach my $database ( qw( CROSBI-CASOPIS CROSBI-PREPRINT CROSBI-RKNJIGA ) ) {
+foreach my $database ( qw( CROSBI-CASOPIS CROSBI-PREPRINT CROSBI-RKNJIGA CROSBI-ZBORNIK ) ) {
 	diag $o->{database} = $database;
 
 ok( my $hits = $o->search( $search ), "search: $search" );

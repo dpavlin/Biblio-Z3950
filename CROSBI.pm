@@ -72,7 +72,7 @@ select
 	$table.*
 	,ARRAY( select napomena from rad_napomena where rad_napomena.id = $table.id ) as rad_napomena
 	,ARRAY( select projekt from rad_projekt where rad_projekt.id = $table.id ) as rad_projekt
-	--,ARRAY( select datum from rad_godina where rad_godina.id = $table.id ) as rad_godina
+	,ARRAY( select datum from rad_godina where rad_godina.id = $table.id ) as rad_godina
 	,ARRAY( select sifra from rad_podrucje where rad_podrucje.id = $table.id ) as rad_podrucje
 	,ARRAY( select url from url where url.id = $table.id ) as url
 from $table
@@ -177,11 +177,12 @@ sub next_marc {
 
 	$format ||= 'marc';
 
-	my $row = $self->{_sth}->fetchrow_hashref;
+	my $sth = $self->{_sth} || die "no _sth";
+	my $row = $sth->fetchrow_hashref;
 
 	warn "## row = ",dump($row) if $ENV{DEBUG};
 
-	die "no row" unless $row;
+	warn "ERROR: no row" unless $row;
 
 	my $id = $row->{id} || die "no id";
 
@@ -219,7 +220,7 @@ sub next_marc {
 
 ## 008 07-10 - Date 1
 
- 	$f008 .= substr($row->{datum},0,4);
+ 	$f008 .= substr( $row->{rad_godina}->[0] ,0,4);
 
 ## 008 11-14 - Date 2 
 
@@ -228,6 +229,10 @@ sub next_marc {
 	$f008 .= ' ' x ( 15 - length($f008) ); # pad to 15 position
 ## 008 15-17 - Place of publication, production, or execution - ako nema 102, popunjava se s |
 	$f008 .= 'xx ';
+
+## 008 29 - Conference publication
+	$f008 .= ' ' x ( 29 - length($f008) );
+	$f008 .= $self->{_table} eq 'zbornik' ? '1' : '0';
 
 ## 008 35-37 - Language
 	$f008 .= ' ' x ( 35 - length($f008) ); # pad to 35 position
@@ -400,22 +405,43 @@ sub next_marc {
 	}
 
 
+	if ( $row->{casopis} ) {
+
 	$marc->add_fields(773,'0',' ',
 		t => $row->{casopis},
 		x => $row->{issn},
 		g => "$row->{volumen} ($row->{godina}), $row->{broj} ;" . page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
-	) if $row->{casopis};
+	);
+
+	} elsif ( $row->{knjiga} ) {
 
 	# rknjiga-dbi2marc.pl
 	$marc->add_fields(773,'0',' ',
 		t => $row->{knjiga},
-		d => "$row->{godina} : $row->{nakladnik}, $row->{godina}",
+		d => "$row->{grad} : $row->{nakladnik}, $row->{godina}",
 		k => $row->{serija},
 		h => $row->{ukupno_stranica},
 		n => $row->{uredink},
 		z => $row->{isbn},
 		g => page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
-	) if $row->{knjiga};
+	);
+
+	} elsif ( $row->{zbornik} ) {
+
+	# zbornik-dbi2marc.pl
+	$marc->add_fields(773,'0',' ',
+		t => $row->{skup},
+		d => "$row->{grad} : $row->{nakladnik}, $row->{godina}",
+		k => $row->{serija},
+		h => $row->{ukupno_stranica},
+		n => $row->{uredink},
+		z => $row->{isbn},
+		g => page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
+	);
+
+	} else {
+		die "ERROR: 773 undefined in row ",dump($row);
+	}
 
 
 	if ( my $file = $row->{datoteka} ) {
@@ -439,6 +465,7 @@ sub next_marc {
 		casopis  => 'CLA',
 		preprint => 'PRE',
 		rknjiga  => 'POG',
+		zbornik  => 'RZB',
 	};
 
 	my @f942 = (
@@ -474,6 +501,10 @@ sub next_marc {
 			warn "ERROR kategorija $row->{kategorija}";
 		}
 
+	} elsif ( $self->{_table} =~ m/zbornik/ ) {
+
+		push @f942, v => $row->{vrst_recenzije};
+
 	} else {
 		die "ERROR _table $self->{_table}";
 	}
@@ -481,7 +512,7 @@ sub next_marc {
 	$marc->add_fields(942,' ',' ',
 		@f942,
 		u => '1',
-		z => join(' - ', $row->{kategorija}, $row->{vrsta_rada}),
+		z => join(' - ', grep { defined $_ } ($row->{kategorija}, $row->{vrst_sudjelovanja}, $row->{vrsta_rada})),
 	);
 
 =for later
