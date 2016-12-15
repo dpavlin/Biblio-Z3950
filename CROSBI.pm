@@ -425,8 +425,8 @@ sub next_marc {
 	$marc->add_fields(773,'0',' ',
 		t => $row->{casopis},
 		x => $row->{issn},
-		g => combine( $row->{volumen}, ' ', [ '(', $row->{godina}, ')' ], ', ', $row->{broj}, ' ;', page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}) ),
 #		g => "$row->{volumen} ($row->{godina}), $row->{broj} ;" . page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
+		g => combine( $row->{volumen}, ' ', [ '(', $row->{godina}, ')' ], ', ', $row->{broj}, ' ;', page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}) ),
 	);
 
 	} elsif ( $self->{_table} =~ m/rknjiga/ ) {
@@ -440,7 +440,7 @@ sub next_marc {
 		h => $row->{ukupno_stranica},
 		n => $row->{uredink},
 		z => $row->{isbn},
-		g => page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
+		g => page_range('str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
 	);
 
 	} elsif ( $self->{_table} =~ m/zbornik/ ) {
@@ -454,7 +454,7 @@ sub next_marc {
 		h => $row->{ukupno_stranica},
 		n => $row->{uredink},
 		z => $row->{isbn},
-		g => page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
+		g => page_range('str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
 	);
 
 	} else {
