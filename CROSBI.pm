@@ -47,6 +47,9 @@ sub usemap {{
 =cut
 
 my $dbname = 'bibliografija';
+my $pg_user = $ENV{PGUSER} || '';
+my $pg_passwd = $ENV{PGPASSWD} || '';
+my $pg_host = $ENV{PGHOST} || '';
 my @and;
 my @exec;
 
@@ -119,7 +122,7 @@ inner join rad_ustanova using (id) -- sifra
 
 warn "XXX SQL = ",$sql, dump( @exec );
 
-	my $dbh = DBI->connect_cached("dbi:Pg:dbname=$dbname", '', '', {AutoCommit => 0});
+	my $dbh = DBI->connect_cached("dbi:Pg:dbname=$dbname;host=$pg_host", $pg_user, $pg_passwd, {AutoCommit => 0});
 
 	my $sth = $dbh->prepare( $sql );
 
