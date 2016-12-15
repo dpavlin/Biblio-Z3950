@@ -58,6 +58,9 @@ sub search {
 
 	die "need query" unless defined $query;
 
+	$query =~ s/^\s+//;
+	$query =~ s/\s+$//;
+
 	my $table = lc $self->{database};
 	$table =~ s/^crosbi-//g;
 
