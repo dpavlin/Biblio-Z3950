@@ -346,7 +346,7 @@ sub next_marc {
 		a => $row->{volumen},
 		b => $row->{broj},
 		i => $row->{godina},
-	);
+	) if $row->{volumen};
 
 # /data/FF/crosbi/2016-12-12/casopis-rad_napomena.sql
 
@@ -399,11 +399,24 @@ sub next_marc {
 		) foreach @a;
 	}
 
+
 	$marc->add_fields(773,'0',' ',
 		t => $row->{casopis},
 		x => $row->{issn},
 		g => "$row->{volumen} ($row->{godina}), $row->{broj} ;" . page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
-	);
+	) if $row->{casopis};
+
+	# rknjiga-dbi2marc.pl
+	$marc->add_fields(773,'0',' ',
+		t => $row->{knjiga},
+		d => "$row->{godina} : $row->{nakladnik}, $row->{godina}",
+		k => $row->{serija},
+		h => $row->{ukupno_stranica},
+		n => $row->{uredink},
+		z => $row->{isbn},
+		g => page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
+	) if $row->{knjiga};
+
 
 	if ( my $file = $row->{datoteka} ) {
 		$marc->add_fields(856,' ',' ',
@@ -422,19 +435,48 @@ sub next_marc {
 		);
 	}
 
+	my $f942c = {
+		casopis  => 'CLA',
+		preprint => 'PRE',
+		rknjiga  => 'POG',
+	};
+
 	my @f942 = (
-		c => $self->{_table} eq 'casopis'  ? 'CLA' :
-		     $self->{_table} eq 'preprint' ? 'PRE' :
-			'FIXME',
+		c => $f942c->{ $self->{_table} } || die "no table $self->{_table} in ".dump($f942c),
 	);
+
 	if ( $row->{status_rada} ) {
 		push @f942, (
 		f => 1,
 		g => $row->{status_rada}
 		);
 	}
-	push @f942, t => '1.01' if $row->{kategorija} =~ m/Znanstveni/;
-	push @f942, t => '1.04' if $row->{kategorija} =~ m/Strucni/;
+
+	if ( $self->{_table} =~ m/(casopis|preprint)/ ) {
+
+		if ( $row->{kategorija} =~ m/Znanstveni/ ) {
+			push @f942, t => '1.01'
+		} elsif ( $row->{kategorija} =~ m/Strucni/ ) {
+			push @f942, t => '1.04';
+		} else {
+			warn "ERROR kategorija $row->{kategorija}";
+		}
+
+	} elsif ( $self->{_table} =~ m/rknjiga/ ) {
+
+		if ( $row->{kategorija} =~ m/Znanstveni/ ) {
+			push @f942, t => '1.16.1';
+		} elsif ( $row->{kategorija} =~ m/Pregledni/ ) {
+			push @f942, t => '1.16.2';
+		} elsif ( $row->{kategorija} =~ m/Strucni/ ) {
+			push @f942, t => '1.17';
+		} else {
+			warn "ERROR kategorija $row->{kategorija}";
+		}
+
+	} else {
+		die "ERROR _table $self->{_table}";
+	}
 
 	$marc->add_fields(942,' ',' ',
 		@f942,
