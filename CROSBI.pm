@@ -68,14 +68,15 @@ sub search {
 
 	my $sql = qq{
 
-select distinct *
+select
+	$table.*
+	,ARRAY( select napomena from rad_napomena where rad_napomena.id = $table.id ) as rad_napomena
+	,ARRAY( select projekt from rad_projekt where rad_projekt.id = $table.id ) as rad_projekt
+	--,ARRAY( select datum from rad_godina where rad_godina.id = $table.id ) as rad_godina
+	,ARRAY( select sifra from rad_podrucje where rad_podrucje.id = $table.id ) as rad_podrucje
+	,ARRAY( select url from url where url.id = $table.id ) as url
 from $table
-inner join rad_ustanova using (id)
-left outer join rad_napomena using (id)
-left outer join rad_projekt using (id)
-left outer join rad_godina using (id)
-left outer join rad_podrucje using (id)
-left outer join url using (id)
+inner join rad_ustanova using (id) -- sifra
 	};
 
 	@and = ( qq{ rad_ustanova.sifra = ? } );
@@ -176,16 +177,9 @@ sub next_marc {
 
 	$format ||= 'marc';
 
-	my $sth = $self->{_sth} || die "no _sth";
+	my $row = $self->{_sth}->fetchrow_hashref;
 
-	my $row = $sth->fetchrow_hashref;
-
-	while ( $self->{_deduplicate}->{ $row->{id} } ) {
-		warn "DUPLICATE $row->{id}, skipping\n";
-		$row = $sth->fetchrow_hashref;
-		return unless $row;
-	}
-	$self->{_deduplicate}->{ $row->{id} }++;
+	warn "## row = ",dump($row) if $ENV{DEBUG};
 
 	die "no row" unless $row;
 
@@ -356,9 +350,11 @@ sub next_marc {
 
 # /data/FF/crosbi/2016-12-12/casopis-rad_napomena.sql
 
-	$marc->add_fields(500,' ',' ',
-		a => substr($row->{napomena}, 0, 9999), # XXX marc limit for one subfield is 4 digits in dictionary
-	);
+	foreach my $napomena ( @{ $row->{rad_napomena} } ) {
+		$marc->add_fields(500,' ',' ',
+			a => substr($napomena, 0, 9999), # XXX marc limit for one subfield is 4 digits in dictionary
+		);
+	}
 
 	$marc->add_fields(520,' ',' ',
 		a => substr($row->{sazetak}, 0, 9999)
@@ -376,9 +372,11 @@ sub next_marc {
 		a => $row->{jezik}
 	);
 
-	$marc->add_fields(690,' ',' ',
-		a => $row->{sifra}
-	);
+	foreach my $v ( @{ $row->{rad_podrucje} } ) {
+		$marc->add_fields(690,' ',' ',
+			a => $v,
+		);
+	}
 
 
 	$marc->add_fields(693,' ',' ',
@@ -413,10 +411,14 @@ sub next_marc {
 		);
 	};
 
-	foreach my $name (qw( openurl url )) {
-		next if ! $row->{$name};
+
+	$marc->add_fields(856,' ',' ',
+		u => $row->{openurl},
+	) if $row->{openurl};
+
+	foreach my $url ( @{ $row->{url} } ) {
 		$marc->add_fields(856,' ',' ',
-			u => $row->{$name},
+			u => $url,
 		);
 	}
 
