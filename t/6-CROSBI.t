@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 18;
+use Test::More tests => 21;
 
 my $search = join(' ', @ARGV) || 'fti_au:denis bratko';
 

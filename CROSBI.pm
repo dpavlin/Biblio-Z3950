@@ -56,7 +56,7 @@ sub search {
 	utf8::decode( $query );
 	warn "QUERY",dump( $query );
 
-	die "need query" unless defined $query;
+	die "ERROR need query" unless defined $query;
 
 	$query =~ s/^\s+//;
 	$query =~ s/\s+$//;
@@ -177,14 +177,14 @@ sub next_marc {
 
 	$format ||= 'marc';
 
-	my $sth = $self->{_sth} || die "no _sth";
+	my $sth = $self->{_sth} || die "ERROR no _sth";
 	my $row = $sth->fetchrow_hashref;
 
 	warn "## row = ",dump($row) if $ENV{DEBUG};
 
 	warn "ERROR: no row" unless $row;
 
-	my $id = $row->{id} || die "no id";
+	my $id = $row->{id} || die "ERROR no id";
 
 	my $marc = MARC::Record->new;
 	$marc->encoding('UTF-8');
@@ -404,21 +404,38 @@ sub next_marc {
 		) foreach @a;
 	}
 
+	sub combine {
+		my $out = '';
+		my $last_delimiter = '';
+		while(@_) {
+			my $value = shift @_;
+			my $delimiter = shift @_;
+			my ( $before,$after ) = ( '', '' );
+			( $before, $value, $after ) = @$value if ( ref $value eq 'ARRAY' );
+			$out .= $last_delimiter . $value if $value;
+			$last_delimiter = $delimiter || last;
+		}
+		warn "### [$out]";
+		return $out;
+	}
+			
 
-	if ( $row->{casopis} ) {
+	if ( $self->{_table} =~ m/(casopis|preprint)/ ) {
 
 	$marc->add_fields(773,'0',' ',
 		t => $row->{casopis},
 		x => $row->{issn},
-		g => "$row->{volumen} ($row->{godina}), $row->{broj} ;" . page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
+		g => combine( $row->{volumen}, ' ', [ '(', $row->{godina}, ')' ], ', ', $row->{broj}, ' ;', page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}) ),
+#		g => "$row->{volumen} ($row->{godina}), $row->{broj} ;" . page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
 	);
 
-	} elsif ( $row->{knjiga} ) {
+	} elsif ( $self->{_table} =~ m/rknjiga/ ) {
 
 	# rknjiga-dbi2marc.pl
 	$marc->add_fields(773,'0',' ',
 		t => $row->{knjiga},
-		d => "$row->{grad} : $row->{nakladnik}, $row->{godina}",
+#		d => "$row->{grad} : $row->{nakladnik}, $row->{godina}",
+		d => combine( $row->{grad}, ' : ', $row->{nakladnik}, ', ', $row->{godina} ),
 		k => $row->{serija},
 		h => $row->{ukupno_stranica},
 		n => $row->{uredink},
@@ -426,12 +443,13 @@ sub next_marc {
 		g => page_range(' str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
 	);
 
-	} elsif ( $row->{zbornik} ) {
+	} elsif ( $self->{_table} =~ m/zbornik/ ) {
 
 	# zbornik-dbi2marc.pl
 	$marc->add_fields(773,'0',' ',
 		t => $row->{skup},
-		d => "$row->{grad} : $row->{nakladnik}, $row->{godina}",
+#		d => "$row->{grad} : $row->{nakladnik}, $row->{godina}",
+		d => combine( $row->{grad}, ' : ', $row->{nakladnik}, ', ', $row->{godina} ),
 		k => $row->{serija},
 		h => $row->{ukupno_stranica},
 		n => $row->{uredink},
@@ -469,7 +487,7 @@ sub next_marc {
 	};
 
 	my @f942 = (
-		c => $f942c->{ $self->{_table} } || die "no table $self->{_table} in ".dump($f942c),
+		c => $f942c->{ $self->{_table} } || die "ERROR no table $self->{_table} in ".dump($f942c),
 	);
 
 	if ( $row->{status_rada} ) {
