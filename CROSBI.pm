@@ -61,6 +61,8 @@ sub search {
 	my $table = lc $self->{database};
 	$table =~ s/^crosbi-//g;
 
+	$self->{_table} = $table;
+
 	my $sql = qq{
 
 select distinct *
@@ -416,7 +418,9 @@ sub next_marc {
 	}
 
 	my @f942 = (
-		c => 'CLA'
+		c => $self->{_table} eq 'casopis'  ? 'CLA' :
+		     $self->{_table} eq 'preprint' ? 'PRE' :
+			'FIXME',
 	);
 	if ( $row->{status_rada} ) {
 		push @f942, (
