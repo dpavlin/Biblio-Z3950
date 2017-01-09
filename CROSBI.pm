@@ -90,7 +90,7 @@ inner join rad_ustanova using (id) -- sifra
 			my $query = shift;
 			warn "## parse_fti [$query]";
 			my $fti;
-			if ( $query =~ s/^(fti_.+):// ) {
+			if ( $query =~ s/^(fti_.+):\s*// ) {
 				$fti = $1;
 			} else {
 				warn "INVALID QUERY no fti_xxx: [$query]";
