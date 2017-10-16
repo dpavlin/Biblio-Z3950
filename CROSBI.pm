@@ -100,8 +100,11 @@ inner join rad_ustanova using (id) -- sifra
 
 			my @or;
 			foreach my $f ( split(/,/,$fti) ) {
-				push @or, "$f @@ to_tsquery('english',?)";
-				push @exec, $tsquery;
+#				push @or, "$f @@ to_tsquery('english',?)";
+#				push @exec, $tsquery;
+
+				push @or, "$f @@ to_tsquery('english',?) or $f @@ to_tsquery('croatian',?)";
+				push @exec, $tsquery, $tsquery;
 			};
 			push @and, "( " . join(" or ", @or) . ")";
 		}
@@ -114,8 +117,10 @@ inner join rad_ustanova using (id) -- sifra
 		parse_fti $query;
 	} else { # no " AND " in query
 		my $tsquery = join(' & ', split(/\s+/,$query) );
-		push @and, "( fti_au @@ to_tsquery('english',?) or fti_pr @@ to_tsquery('english',?) )";
-		push @exec, $tsquery,  $tsquery;
+#		push @and, "( fti_au @@ to_tsquery('english',?) or fti_pr @@ to_tsquery('english',?) )";
+#		push @exec, $tsquery,  $tsquery;
+		push @and, "( fti_au @@ to_tsquery('english',?) or fti_pr @@ to_tsquery('english',?) or fti_au @@ to_tsquery('croatian',?) or fti_pr @@ to_tsquery('croatian',?) )";
+		push @exec, $tsquery,  $tsquery, $tsquery,  $tsquery;
 	}
 
 
