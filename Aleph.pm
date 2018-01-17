@@ -6,6 +6,7 @@ use strict;
 use MARC::Record;
 use Data::Dump qw/dump/;
 
+use Scraper;
 use base 'Scraper';
 
 sub diag {
