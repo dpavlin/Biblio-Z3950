@@ -31,6 +31,7 @@ my $databases = {
 	'CROSBI-PREPRINT' => 'CROSBI',
 	'CROSBI-RKNJIGA' => 'CROSBI',
 	'CROSBI-ZBORNIK' => 'CROSBI',
+	'CROSBI-OSTALO' => 'CROSBI',
 };
 
 my $max_records = 10; # XXX configure this

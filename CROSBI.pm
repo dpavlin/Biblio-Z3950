@@ -347,9 +347,9 @@ sub next_marc {
 	}
 
 	# fake date for Koha import
-	$marc->add_fields(260,' ',' ',
-		c => $row->{godina},
-	);
+	#$marc->add_fields(260,' ',' ',
+	#	c => $row->{godina},
+	#);
 
 	$marc->add_fields(300,' ',' ',
 		a => page_range('',$row->{stranica_prva},$row->{stranica_zadnja}),
@@ -466,6 +466,12 @@ sub next_marc {
 		g => page_range('str. ',$row->{stranica_prva}, $row->{stranica_zadnja}),
 	);
 
+	} elsif ( $self->{_table} =~ m/ostalo/ ) {
+
+	$marc->add_fields(773,'0',' ',
+		t => $row->{izvornik},
+	);
+
 	} else {
 		die "ERROR: 773 undefined in row ",dump($row);
 	}
@@ -497,7 +503,7 @@ sub next_marc {
 
 	my @f942 = (
 		c => $f942c->{ $self->{_table} } || die "ERROR no table $self->{_table} in ".dump($f942c),
-	);
+	) if $self->{_table} !~ m/ostalo/;
 
 	if ( $row->{status_rada} ) {
 		push @f942, (
@@ -531,6 +537,10 @@ sub next_marc {
 	} elsif ( $self->{_table} =~ m/zbornik/ ) {
 
 		push @f942, v => $row->{vrst_recenzije};
+
+	} elsif ( $self->{_table} =~ m/ostalo/ ) {
+
+		# XXX 
 
 	} else {
 		die "ERROR _table $self->{_table}";

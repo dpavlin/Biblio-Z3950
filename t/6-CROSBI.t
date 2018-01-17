@@ -3,7 +3,7 @@
 use warnings;
 use strict;
 
-use Test::More tests => 21;
+use Test::More tests => 22;
 
 my $search = join(' ', @ARGV) || 'fti_au:denis bratko';
 
@@ -11,7 +11,7 @@ use_ok 'CROSBI';
 
 ok( my $o = CROSBI->new(), 'new' );
 
-foreach my $database ( qw( CROSBI-CASOPIS CROSBI-PREPRINT CROSBI-RKNJIGA CROSBI-ZBORNIK ) ) {
+foreach my $database ( qw( CROSBI-CASOPIS CROSBI-PREPRINT CROSBI-RKNJIGA CROSBI-ZBORNIK CROSBI-OSTALO ) ) {
 	diag $o->{database} = $database;
 
 ok( my $hits = $o->search( $search ), "search: $search" );
