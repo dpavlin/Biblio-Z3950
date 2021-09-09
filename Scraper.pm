@@ -3,7 +3,9 @@ package Scraper;
 use warnings;
 use strict;
 
+use IO::Socket::SSL qw();
 use WWW::Mechanize;
+
 
 sub new {
     my ( $class, $database ) = @_;
@@ -11,7 +13,12 @@ sub new {
 	$database ||= $class;
 
     my $self = {
-		mech => WWW::Mechanize->new(),
+		mech => WWW::Mechanize->new(
+			ssl_opts => {
+			    SSL_verify_mode => IO::Socket::SSL::SSL_VERIFY_NONE,
+			    verify_hostname => 0, # this key is likely going to be removed in future LWP >6.04
+			}
+		),
 		database => $database,
 	};
     bless $self, $class;
